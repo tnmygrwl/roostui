@@ -1,0 +1,178 @@
+<html>
+  <head>
+    <title>Roost Detection Visualization</title>
+
+    <script src="http://code.jquery.com/jquery-1.8.2.js"></script>
+    <!-- <script src="jquery.csv.min.js"></script> -->
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://d3js.org/d3-array.v2.min.js"></script>
+    <script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+    <script src="sprintf.min.js"></script>
+    <script src="plotly-latest.min.js"></script>
+    
+  </head>
+  
+  <style>
+    #instructions, #controls, #filtering, #plot, #info {
+        padding: 5px;
+        display:inline-block;
+        vertical-align: middle;
+    }
+
+    div.tooltip {
+        position: absolute;
+        display: inline-block;
+        //text-align: center;
+        //width: 200px;
+        //height: 120px;
+        padding: 2px;	
+        font: 12px sans-serif;	
+        background: white;
+        border: 0px;					
+        border-radius: 8px;
+        z-index: 100;
+    }
+
+    div.tooltip::after {
+        content: " ";
+        position: absolute;
+        top: 50%;
+        right: 100%; /* To the left of the tooltip */
+        margin-top: -10px;
+        border-width: 10px;
+        border-style: solid;
+        border-color: transparent white transparent transparent;
+    }
+
+    
+  /* #controls { */
+    /*     width: 300px; */
+    /* } */
+
+    /* #filtering { */
+    /*     // width: 500px; */
+    /* } */
+
+    ul {
+        margin-top: 5px;
+        padding-left: 15px;
+    }
+
+    #plot {
+        width:400px;
+        height:100px;
+    }
+        
+    #comment_div {
+        width: 340px;
+    }
+
+    #comment {
+        width: 300px;
+    }
+
+    #viewer {
+        position: relative;
+        align: center;
+    }
+
+    
+    #img1, #svg1 {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+        width: 600px;
+        height: 600px;
+    }
+
+    #img2, #svg2 {
+        position: absolute;
+        left: 600px;
+        top: 0px;
+        width: 600px;
+        height: 600px;
+    }
+
+    /* Unfiltered */
+    .bbox > rect {
+        stroke-width: 3;
+        pointer-events: all;
+    }
+
+    .bbox > text {
+        stroke: #ffffff;
+        fill: #ffffff;
+    }
+
+    /* Unfiltered + selected */
+    .bbox.selected > rect {
+        fill: orange;
+        fill-opacity: 0.6;
+    }
+
+    /* Filtered, selected */
+    .bbox.filtered.selected {
+        opacity: 0.6;
+    }
+    
+    /* Filtered,  unselected */
+    .bbox.filtered {
+        opacity: 0.25;
+    }    
+
+    input[type="radio"]{
+        margin: 0 2px 0 2px;
+    }
+
+    #mapper {
+        margin: 0 0 0 10px;
+    }
+  </style>
+  
+  <body>
+
+    <div id="instructions">
+      <ul>
+        <li>up/down for days</li>
+        <li>left/right for frames</li>
+        <li>click bounding box for map</li>
+      </ul>
+      <input id="export" type="button" value="Export"></input><strong>(REQUIRED TO SAVE)</strong>
+    </div>
+    <div id="controls">
+      Station:
+      <select id="stations">
+        <option disabled selected>Select station</option>
+      </select> <br/>
+      Date: <select id="dateSelect"></select> <br/>
+      Time: <select id="timeSelect"> </select> <br/>
+      <input id="dayFilterBox" type="checkbox" checked></input> Only days with roosts
+    </div>
+    <div id="filtering">
+      <strong>Track filtering</strong>:<br/>
+      <ul>
+        <li>At least <input type="number" min="1" max="10" step="1" id="detections_min" value="2"/> detections</li>
+        <li>At least <input type="number" min="1" max="10" step="1" id="high_quality_detections_min" value="2"/> detections with
+          score at least <input type="number" min="-1" max="1" step="0.05" value="0.05" id="score_min"/></li>
+        <li>Average score at least <input type="number" min="-1" max="1" step="0.05" value="-1" id="avg_score_min"/></li>
+      </ul>
+    </div>
+    <div id="plot">
+    </div>    
+    <div id="labeltip" class="tooltip">
+      <div id="labels">
+      </div>
+      <span id="mapper"></span>
+    </div>
+    <!-- </div> -->
+    <div id="viewer">
+      <img id="img1"/> 
+      <svg id="svg1"/>
+      <img id="img2"/> 
+      <svg id="svg2"/>
+    </div>
+</body>
+
+<script src="vis.js"></script>
+
+</html>
