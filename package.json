@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "lintcheck": "eslint . --ext .js,.jsx,.ts,.tsx --ignore-pattern '*boot*' --ignore-pattern '*jasmine*' --ignore-pattern '*jquery*' --ignore-pattern '*plotly*' --ignore-pattern '*sprintf*'",
+    "test": "jasmine"
+  }
+}
