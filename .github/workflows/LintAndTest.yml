@@ -1,0 +1,14 @@
+name: pre-commit
+
+on:
+  pull_request:
+  push:
+    branches: ['**']
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run ESLint
+      run: eslint . --ext .js,.jsx,.ts,.tsx --ignore-pattern '*boot*' --ignore-pattern '*jasmine*' --ignore-pattern '*jquery*' --ignore-pattern '*plotly*' --ignore-pattern '*sprintf*'
+      
