@@ -16,3 +16,11 @@ Roost visualization and annotation web interface
 5. Rebasing with main can be done either with rebase or merge. First checkout the branch you want to work with. 
 6. All changes to be deployed to UAT or main must have a relevant PR request associated with them, which would document approval and changes.
 
+#### Before committing - process
+1. Check lint errors/warnings. We do not have any rules set up right now, but they could be added as required. 
+2. Install eslint using npm on your local. Run npx eslint *.js to run the tests.
+3. Run jasmine tests by running SpecRunner.html on the browser to check the tests
+4. Commit the code after that
+5. Add files to the eslint ignore files if you're adding any libraries etc.
+
+
