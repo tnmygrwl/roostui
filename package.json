@@ -1,0 +1,22 @@
+{
+  "name": "roostui",
+  "version": "1.0.0",
+  "description": "Roost visualization and annotation web interface",
+  "main": "vis.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/darkecology/roostui.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/darkecology/roostui/issues"
+  },
+  "homepage": "https://github.com/darkecology/roostui#readme",
+  "devDependencies": {
+    "eslint": "^7.21.0"
+  }
+}

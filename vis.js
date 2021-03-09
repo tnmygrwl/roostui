@@ -1,7 +1,7 @@
 var UI = (function() {
 
 	var UI = {};
-	
+	var initInd;
 	var days;					// BoolList of dates
 	var frames;					// BoolList of frames for current day
 
@@ -21,17 +21,17 @@ var UI = (function() {
 				  'bad-track'];
 	
 	var keymap = {
-		'38': prev_day_with_roost, // up
-		'40': next_day_with_roost, // down
-		'37': prev_frame_with_roost,	// left
-		'39': next_frame_with_roost   // right
-	};
-
-	var shift_keymap = {
 		'38': prev_day, // up
 		'40': next_day, // down
 		'37': prev_frame,	// left
 		'39': next_frame   // right
+	};
+
+	var shift_keymap = {
+		'38': prev_day_with_roost, // up
+		'40': next_day_with_roost, // down
+		'37': prev_frame_with_roost,	// left
+		'39': next_frame_with_roost   // right
 	};
 
 	/* -----------------------------------------
@@ -209,12 +209,14 @@ var UI = (function() {
 	// Function on every page load
 	UI.init = function()
 	{
+		initInd = 1;
 		svgs = d3.selectAll("#svg1, #svg2");
 
 		// Currently inactive
 		d3.select("#export").on("click", export_sequences);
 		// d3.json('data/labels.json').then(init_labels);
 		// d3.select("#comment").on("change paste keyup", set_comment);
+		d3.select("#reset").on("click", reset_url);
 		
 		// Populate data and set event handlers
 		d3.csv('data/stations.csv').then(init_stations);
@@ -229,7 +231,7 @@ var UI = (function() {
 					allscans = scan_list.split("\n");
 
 					// Group by station-year. Example key: KBUF2010
-					function get_station_year(d) {						
+					function get_station_year(d) {	
 						var s = parse_scan(d);
 						return s['station'] + s['date'].substr(0,4); 
 					}
@@ -238,16 +240,29 @@ var UI = (function() {
 										(d) => get_station_year(d),
 										(d) => parse_scan(d)['date']);
 					
-					d3.select("#dayFilterBox").on("change", populate_days);					
+					var arr = window.location.search.substring(1).split("&");
+					if (arr[0]){
+						change_station();
+					}
+					
+					
 				}
 			);
 	};
 	
 
+	function reset_url()
+	{
+		window.location.replace(window.location.href.replace(window.location.search,''));
+		UI.init();
+		
+	}
+	
 	function init_stations(data)
 	{
 		// Populate "station" dropdown list
 		var stations = d3.select('#stations');
+		
 		
 		var options = stations.selectAll("options")
 			.data(data)
@@ -256,14 +271,22 @@ var UI = (function() {
 			.text(function(d) {
 				return d.station;
 			});
+		// If the query gives a year, do the thing we do in change station
 		
 		stations.on("change", change_station);
+		
 	}
 
 	function change_station() {
+		var arr = window.location.search.substring(1).split("&");
 		
 		// Called when "station" is selected to fetch data
 		let stations = d3.select('#stations').node();
+		if (stations.value == arr[0])
+			{
+				return;
+			}
+		
 		stations.blur();
 
 		// If work needs saving, check if user wants to proceed
@@ -273,9 +296,18 @@ var UI = (function() {
 			}
 		}
 		
+		if (arr[0] && initInd==1){
+			stations.value = arr[0];
+		}
+		
 		let station_year = stations.value; // actually a "station-year", e.g., KBUF2010
-
-		let csv_file = sprintf("data/boxes-nms/%s_boxes.txt", station_year);
+		/*if (arr[0]){
+			var csv_file = sprintf("data/boxes-nms/%s_boxes.txt", arr[0]);
+		}
+		else{*/
+			var csv_file = sprintf("data/boxes-nms/%s_boxes.txt", station_year);
+		/*}*/
+		
 		
 		// Get boxes for this station
 		d3.csv(csv_file,
@@ -324,9 +356,8 @@ var UI = (function() {
 					}
 					
 					update_tracks(); // add attributes that depend on user input
-
 					scans = allscans.get(station_year);	  // restrict to scans for this station-year
-
+					
 					// Plot detection scores
 					plot_scores(boxes.map(d => d.det_score));
 
@@ -461,14 +492,13 @@ var UI = (function() {
 	
 	function populate_days() {
 		
-		// if(d3.select("#dayFilterBox").property("checked")) {
-		// 	days = Array.from(boxes_by_day.keys());
-		// }
-		// else {
-		// 	days = Array.from(scans.keys());
-		// }
-
+		var arr = window.location.search.substring(1).split("&");
+		if(arr[0] && initInd==1){
+			scans = allscans.get(arr[0]);
+		}
+		
 		days = new BoolList(scans.keys(), boxes_by_day.keys());
+		// example query http://localhost:8000/?KBUF1999&KBUF19990113_144744
 		
 		var dateSelect = d3.select("#dateSelect");
 		var options = dateSelect.selectAll("option")
@@ -491,7 +521,10 @@ var UI = (function() {
 			days.currentInd = n.value;
 			render_day();
 		});
-
+		if (typeof arr[1] !== "undefined" && initInd==1){
+			days.currentItem = (arr[1]).substr(4,8);
+			
+		}
 		render_day();
 	}
 
@@ -523,12 +556,17 @@ var UI = (function() {
 	function render_day() {
 
 		if(!days) return;
+		
 
 		d3.select("#dateSelect").property("value", days.currentInd);
-
+		var arr = window.location.search.substring(1).split("&");
+		
 		// Populate the dropdown
 		var day = days.currentItem; // string representation of date
-
+		if ((arr.length)>0 && arr!="" && initInd==1){
+			days.currentItem = (arr[1].substr(4,8));
+			day = (arr[1].substr(4,8));
+		}
 		var allframes = scans.get(day); // list of scans
 		var frames_with_roosts = [];
 		if (boxes_by_day.has(day)) {
@@ -553,7 +591,8 @@ var UI = (function() {
 		timeSelect.on("change", () => {
 			var n = timeSelect.node();
 			n.blur();
-			go_to_frame(n.value);
+			frames.currentInd = n.value;
+			render_frame();
 		});
 
 		render_frame();
@@ -613,6 +652,20 @@ var UI = (function() {
 		var scan = frames.currentItem;
 		
 		d3.select("#timeSelect").property("value", frames.currentInd);
+		
+		var arr = window.location.search.substring(1).split("&");
+		if ((arr.length)>0 && arr!="" && initInd==1){
+			days.currentInd = days.items.indexOf( (arr[1].substr(4,8)) );
+			days.currentItem = (arr[1].substr(4,8));
+			day = (arr[1].substr(4,8));
+			d3.select("#dateSelect").property("value", days.currentInd);
+			frames.currentInd = frames.items.indexOf( arr[1] );
+			frames.currentItem = arr[1];
+			d3.select("#timeSelect").property("value", frames.currentInd);
+		}
+		/**/
+		
+		
 		
 		// $("#from_sunrise").text(s.boxes[i].from_sunrise);		
 
@@ -677,32 +730,15 @@ var UI = (function() {
 		 		.attr("x", b => b.x - scale*b.r + 5)
 				.attr("y", b => b.y - scale*b.r - 5)
 		 		.text(b => b.track_id + ": " + b.det_score);
+			newUrl=(window.location.href.split("?")[0]+"?"+frames.currentItem.substr(0,8)+"&"+frames.currentItem);
+			history.replaceState({}, null, newUrl);
+			initInd = 0;
+			/*if (!(window.location.search.substring(1)==frames.currentItem.substr(0,8)+"&"+frames.currentItem))
+			{
+			location.replace(newUrl);
+			}*/
 		}
 	}	
-
-	function parse_day(day) {
-		var y  = day.substr(0,4);
-		var m  = day.substr(4,2) - 1;
-		var d  = day.substr(6,2);
-		
-		var date = new Date(Date.UTC(y, m, d));
-		var datestr = date.toLocaleDateString('en-US', { timeZone: 'UTC' });;
-		return datestr;
-	}
-
-	function parse_time(timestr) {		
-		var hour   = timestr.substr(0,2);
-		var minute = timestr.substr(2,2);
-		var second = timestr.substr(4,2);
-		return hour + ':' + minute + ':' + second + ' UTC';
-	}
-
-	function parse_scan(scan) {
-		var station = scan.substr(0, 4);
-		var datestr = scan.substr(4, 8);
-		var timestr = scan.substr(13,6);
-		return {'station': station, 'date': datestr, 'time': timestr};
-	}
 
 	function mapper(box) {
 		var ll = box.lat + "," + box.lon;
@@ -742,13 +778,7 @@ var UI = (function() {
 	function next_day_with_roost() {
 		if (days.nextTrue()) render_day();
 	}
-
-	function get_urls(scan) {
-		var dz_url = "https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/ref1_image/" + scan + ".png";
-		var vr_url = "https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/rv1_image/" + scan + ".png";
-		return [dz_url, vr_url];
-	}
-
+	
 	function export_sequences() {
 
 		let box_cols = Object.keys(boxes[0]).filter( val => val !== "track");
