@@ -1,3 +1,8 @@
+const d3 = require('d3');
+const sprintf = require('sprintf');
+const Plotly = require('plotly.js-dist-min');
+import * as $ from 'jquery';
+import { parse_day, parse_time, parse_scan, get_urls } from './utils.js';
 var UI = (function() {
 
 	var UI = {};
@@ -522,7 +527,7 @@ var UI = (function() {
 			render_day();
 		});
 		if (typeof arr[1] !== "undefined" && initInd==1){
-			days.currentItem = (arr[1]).substr(4,8);
+			days.currentInd = days.items.indexOf( (arr[1].substr(4,8)) );
 			
 		}
 		render_day();
@@ -564,7 +569,7 @@ var UI = (function() {
 		// Populate the dropdown
 		var day = days.currentItem; // string representation of date
 		if ((arr.length)>0 && arr!="" && initInd==1){
-			days.currentItem = (arr[1].substr(4,8));
+			days.currentInd = days.items.indexOf( (arr[1].substr(4,8)) );
 			day = (arr[1].substr(4,8));
 		}
 		var allframes = scans.get(day); // list of scans
@@ -656,11 +661,11 @@ var UI = (function() {
 		var arr = window.location.search.substring(1).split("&");
 		if ((arr.length)>0 && arr!="" && initInd==1){
 			days.currentInd = days.items.indexOf( (arr[1].substr(4,8)) );
-			days.currentItem = (arr[1].substr(4,8));
+			//days.currentItem = (arr[1].substr(4,8));
 			day = (arr[1].substr(4,8));
 			d3.select("#dateSelect").property("value", days.currentInd);
 			frames.currentInd = frames.items.indexOf( arr[1] );
-			frames.currentItem = arr[1];
+			//frames.currentItem = arr[1];
 			d3.select("#timeSelect").property("value", frames.currentInd);
 		}
 		/**/
@@ -730,7 +735,10 @@ var UI = (function() {
 		 		.attr("x", b => b.x - scale*b.r + 5)
 				.attr("y", b => b.y - scale*b.r - 5)
 		 		.text(b => b.track_id + ": " + b.det_score);
-			newUrl=(window.location.href.split("?")[0]+"?"+frames.currentItem.substr(0,8)+"&"+frames.currentItem);
+			
+			console.log(window.location.href.split("?")[0].concat("?").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
+			var newUrl=(window.location.href.split("?")[0].concat("?").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
+			console.log(newUrl);
 			history.replaceState({}, null, newUrl);
 			initInd = 0;
 			/*if (!(window.location.search.substring(1)==frames.currentItem.substr(0,8)+"&"+frames.currentItem))

@@ -4,19 +4,41 @@
   "description": "Roost visualization and annotation web interface",
   "main": "vis.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "webpack --config webpack.config.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/darkecology/roostui.git"
   },
+  "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/darkecology/roostui/issues"
   },
   "homepage": "https://github.com/darkecology/roostui#readme",
+  "dependencies": {
+    "d3": "^6.6.0",
+    "d3-array": "^2.12.0",
+    "d3-dsv": "^2.0.0",
+    "http-browserify": "^1.7.0",
+    "jquery": "^3.6.0",
+    "plotly": "^1.0.6",
+    "plotly.js-dist-min": "^1.58.4",
+    "sprintf": "^0.1.5",
+    "webpack-cli": "^4.5.0"
+  },
   "devDependencies": {
-    "eslint": "^7.21.0"
+    "@babel/core": "^7.13.10",
+    "@babel/plugin-proposal-class-properties": "^7.13.0",
+    "@babel/preset-env": "^7.13.10",
+    "@babel/preset-react": "^7.12.13",
+    "babel-loader": "^8.2.2",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.25.0"
+  },
+  "browser": {
+    "http": false,
+    "https": false
   }
 }
