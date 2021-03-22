@@ -1,7 +1,6 @@
-const d3 = require('d3');
-const sprintf = require('sprintf');
-const Plotly = require('plotly.js-dist-min');
-import * as $ from 'jquery';
+import * as d3 from 'd3';
+import sprintf from 'sprintf';
+import $ from './node_modules/jquery/dist/jquery.js'; 
 import { parse_day, parse_time, parse_scan, get_urls } from './utils.js';
 var UI = (function() {
 
@@ -321,6 +320,7 @@ var UI = (function() {
 				   d.station = info['station'];
 				   d.date = info['date'];
 				   d.time = info['time'];
+				   d.notes = info['notes'];
 				   
 				   // Swap x and y!!
 				   let tmp = d.y;
@@ -364,38 +364,12 @@ var UI = (function() {
 					scans = allscans.get(station_year);	  // restrict to scans for this station-year
 					
 					// Plot detection scores
-					plot_scores(boxes.map(d => d.det_score));
+					//plot_scores(boxes.map(d => d.det_score));
 
 					populate_days();
 					enable_filtering();
 				});
 		
-	}
-
-	function plot_scores(scores) {
-		let plot_div = document.getElementById('plot');
-		let trace = {x: scores,
-					 type: 'histogram'};
-		Plotly.newPlot(
-			plot_div,
-			[trace],
-			{
-				title: {
-					text: "Detection scores",
-					font: {
-						size: 12
-					}
-				},
-				margin: {		// Can I put this in CSS?
-					l: 30,
-					r: 10,
-					b: 25,
-					t: 25,
-					pad: 0
-				}
-			},
-			{displayModeBar: false}
-		);
 	}
 
 
@@ -736,11 +710,11 @@ var UI = (function() {
 				.attr("y", b => b.y - scale*b.r - 5)
 		 		.text(b => b.track_id + ": " + b.det_score);
 			
-			console.log(window.location.href.split("?")[0].concat("?").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
 			var newUrl=(window.location.href.split("?")[0].concat("?").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
-			console.log(newUrl);
+			
 			history.replaceState({}, null, newUrl);
 			initInd = 0;
+			
 			/*if (!(window.location.search.substring(1)==frames.currentItem.substr(0,8)+"&"+frames.currentItem))
 			{
 			location.replace(newUrl);
