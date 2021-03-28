@@ -31247,9 +31247,10 @@
       select("#export").on("click", export_sequences); // d3.json('data/labels.json').then(init_labels);
       // d3.select("#comment").on("change paste keyup", set_comment);
 
-      select("#reset").on("click", reset_url); // Populate data and set event handlers
+      select("#reset").on("click", reset_url); // Populate datasets
 
-      csv('data/stations.csv').then(init_stations);
+      csv('data/datasets.csv').then(init_datasets); // Populate data and set event handlers
+
       select('body').on('keydown', handle_keydown); // Fetch list of all scans and group by station,date
 
       var scans_file = "data/scans/scan_list.txt";
@@ -31268,7 +31269,7 @@
         });
         var arr = window.location.search.substring(1).split("&");
 
-        if (arr[0]) {
+        if (arr[1]) {
           change_station();
         }
       });
@@ -31279,12 +31280,31 @@
       UI.init();
     }
 
+    function init_datasets(data) {
+      // Populate "station" dropdown list
+      var datasets = select('#datasets');
+      datasets.selectAll("options").data(data).enter().append("option").text(function (d) {
+        return d.dataset;
+      }); // If the query gives a year, do the thing we do in change station
+
+      datasets.on("change", change_dataset);
+      var arr = window.location.search.substring(0).split("&");
+
+      if (arr[0]) {
+        change_dataset();
+      }
+    }
+
     function init_stations(data) {
       // Populate "station" dropdown list
-      var stations = select('#stations');
+      select('#stations').selectAll('option').remove();
+      var stations = select('#stations'); //d3.select('#stations').append('options');
+
       stations.selectAll("options").data(data).enter().append("option").text(function (d) {
         return d.station;
-      }); // If the query gives a year, do the thing we do in change station
+      }); //var options = dateSelect.selectAll("option")
+      //	.data(days.items);
+      // If the query gives a year, do the thing we do in change station
 
       stations.on("change", change_station);
     }
@@ -31294,7 +31314,7 @@
 
       var stations = select('#stations').node();
 
-      if (stations.value == arr[0]) {
+      if (stations.value == arr[1]) {
         return;
       }
 
@@ -31306,18 +31326,20 @@
         }
       }
 
-      if (arr[0] && initInd == 1) {
-        stations.value = arr[0];
+      if (arr[1] && initInd == 1) {
+        stations.value = arr[1];
       }
 
       var station_year = stations.value; // actually a "station-year", e.g., KBUF2010
 
-      /*if (arr[0]){
-      	var csv_file = sprintf("data/boxes-nms/%s_boxes.txt", arr[0]);
+      /*if (arr[1]){
+      	var csv_file = sprintf("data/boxes-nms/%s_boxes.txt", arr[1]);
       }
       else{*/
 
-      var csv_file = sprintf_1("data/boxes-nms/%s_boxes.txt", station_year);
+      console.log(datasets.value);
+      console.log(stations.value);
+      var csv_file = sprintf_1("data/boxes-%s/%s_boxes.txt", datasets.value, station_year);
       /*}*/
       // Get boxes for this station
 
@@ -31383,6 +31405,33 @@
         populate_days();
         enable_filtering();
       });
+    }
+
+    function change_dataset() {
+      var arr = window.location.search.substring(0).split("&");
+      arr[0] = arr[0].replace("?", ""); // Called when "station" is selected to fetch data
+
+      console.log(arr[0]);
+      var datasets = select('#datasets').node();
+
+      if (datasets.value == arr[0]) {
+        return;
+      }
+
+      datasets.blur(); // If work needs saving, check if user wants to proceed
+
+      if (window.onbeforeunload) {
+        if (!window.confirm("Change datasets? You made changes but did not export data.")) {
+          return;
+        }
+      }
+
+      if (arr[0] && initInd == 1) {
+        datasets.value = arr[0];
+      }
+
+      var stationFile = 'data/stations-'.concat(datasets.value).concat('.csv');
+      csv(stationFile).then(init_stations);
     }
     /* -----------------------------------------
      * BoolList
@@ -31507,8 +31556,8 @@
     function populate_days() {
       var arr = window.location.search.substring(1).split("&");
 
-      if (arr[0] && initInd == 1) {
-        scans = allscans.get(arr[0]);
+      if (arr[1] && initInd == 1) {
+        scans = allscans.get(arr[1]);
       }
 
       days = new BoolList(scans.keys(), boxes_by_day.keys()); // example query http://localhost:8000/?KBUF1999&KBUF19990113_144744
@@ -31529,8 +31578,8 @@
         render_day();
       });
 
-      if (typeof arr[1] !== "undefined" && initInd == 1) {
-        days.currentInd = days.items.indexOf(arr[1].substr(4, 8));
+      if (typeof arr[2] !== "undefined" && initInd == 1) {
+        days.currentInd = days.items.indexOf(arr[2].substr(4, 8));
       }
 
       render_day();
@@ -31571,8 +31620,8 @@
       var day = days.currentItem; // string representation of date
 
       if (arr.length > 0 && arr != "" && initInd == 1) {
-        days.currentInd = days.items.indexOf(arr[1].substr(4, 8));
-        day = arr[1].substr(4, 8);
+        days.currentInd = days.items.indexOf(arr[2].substr(4, 8));
+        day = arr[2].substr(4, 8);
       }
 
       var allframes = scans.get(day); // list of scans
@@ -31667,11 +31716,11 @@
       var arr = window.location.search.substring(1).split("&");
 
       if (arr.length > 0 && arr != "" && initInd == 1) {
-        days.currentInd = days.items.indexOf(arr[1].substr(4, 8)); //days.currentItem = (arr[1].substr(4,8));
+        days.currentInd = days.items.indexOf(arr[2].substr(4, 8)); //days.currentItem = (arr[2].substr(4,8));
 
-        day = arr[1].substr(4, 8);
+        day = arr[2].substr(4, 8);
         select("#dateSelect").property("value", days.currentInd);
-        frames.currentInd = frames.items.indexOf(arr[1]); //frames.currentItem = arr[1];
+        frames.currentInd = frames.items.indexOf(arr[2]); //frames.currentItem = arr[2];
 
         select("#timeSelect").property("value", frames.currentInd);
       }
@@ -31739,7 +31788,7 @@
         }).text(function (b) {
           return b.track_id + ": " + b.det_score;
         });
-        var newUrl = window.location.href.split("?")[0].concat("?").concat(frames.currentItem.substr(0, 8)).concat("&").concat(frames.currentItem);
+        var newUrl = window.location.href.split("?")[0].concat("?").concat(datasets.value).concat("&").concat(frames.currentItem.substr(0, 8)).concat("&").concat(frames.currentItem);
         history.replaceState({}, null, newUrl);
         initInd = 0;
         /*if (!(window.location.search.substring(1)==frames.currentItem.substr(0,8)+"&"+frames.currentItem))
