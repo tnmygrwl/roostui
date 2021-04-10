@@ -190,8 +190,9 @@ var UI = (function() {
 		}
 
 		setLabel(label_id, label) {
-			d3.select("#label" + label_id).node().checked = true;			
-			this.label = label;
+			var label_id_n = labels.indexOf(label_id);
+			d3.select("#label"+label_id_n).node().checked = true;	
+			this.label = label_id;
 			this.user_labeled = true;
 			
 			for (const node of this.nodes.values()) {
@@ -221,6 +222,7 @@ var UI = (function() {
 		// d3.json('data/labels.json').then(init_labels);
 		// d3.select("#comment").on("change paste keyup", set_comment);
 		d3.select("#reset").on("click", reset_url);
+		d3.select("#notes-save").on("click", save_notes);
 		// Populate datasets
 		d3.csv('data/datasets.csv').then(init_datasets);
 		// Populate data and set event handlers
@@ -229,31 +231,7 @@ var UI = (function() {
 		d3.select('body').on('keydown', handle_keydown);
 
 		// Fetch list of all scans and group by station,date
-		var scans_file = "data/scans/scan_list.txt";
-		d3.text(scans_file)
-			.then(
-				function(scan_list) {
-					allscans = scan_list.split("\n");
-
-					// Group by station-year. Example key: KBUF2010
-					function get_station_year(d) {	
-						var s = parse_scan(d);
-						return s['station'] + s['date'].substr(0,4); 
-					}
-					
-					allscans = d3.group(allscans,
-										(d) => get_station_year(d),
-										(d) => parse_scan(d)['date']);
-					
-					var arr = window.location.search.substring(1).split("&");
 		
-					if (arr[1]){
-						change_station();
-					}
-					
-					
-				}
-			);
 	};
 	
 
@@ -261,6 +239,23 @@ var UI = (function() {
 	{
 		window.location.replace(window.location.href.replace(window.location.search,''));
 		UI.init();
+		
+	}
+	
+	function save_notes()
+	{
+		var arr = window.location.search.substring(1).split("&");
+		for (var i=0;i<boxes.length;i++){
+			var a=boxes[i];
+			if(a.filename.trim() == arr[2]){
+				let boxes_for_scan = a;
+				boxes_for_scan.notes = document.getElementById('notes').value;
+				boxes_for_scan.user_labeled = true;
+				break;
+			}
+		}
+		
+		
 		
 	}
 	
@@ -312,6 +307,7 @@ var UI = (function() {
 	}
 
 	function change_station() {
+
 		var arr = window.location.search.substring(1).split("&");
 		
 		
@@ -330,19 +326,20 @@ var UI = (function() {
 				return; 
 			}
 		}
-		
 		if (arr[1] && initInd==1){
 			stations.value = arr[1];
+			var station_year = arr[1]; 
+			var csv_file = sprintf("data/boxes-%s/%s_boxes.txt", datasets.value, arr[1]);
 		}
+		else{
 		
-		let station_year = stations.value; // actually a "station-year", e.g., KBUF2010
+		var station_year = stations.value; // actually a "station-year", e.g., KBUF2010
 		/*if (arr[1]){
 			var csv_file = sprintf("data/boxes-nms/%s_boxes.txt", arr[1]);
 		}
 		else{*/
-		console.log(datasets.value);
-		console.log(stations.value);
 			var csv_file = sprintf("data/boxes-%s/%s_boxes.txt", datasets.value, station_year);
+		}
 		/*}*/
 		
 		
@@ -353,7 +350,6 @@ var UI = (function() {
 				   d.station = info['station'];
 				   d.date = info['date'];
 				   d.time = info['time'];
-				   d.notes = info['notes'];
 				   
 				   // Swap x and y!!
 				   let tmp = d.y;
@@ -375,7 +371,6 @@ var UI = (function() {
 						let length = v.length;
 						let tot_score = d3.sum(v, d => d.det_score);
 						let avg_score = tot_score / length;
-						
 						return new Track({
 							date: v[0].date,
 							length: v.length,
@@ -409,7 +404,6 @@ var UI = (function() {
 		var arr = window.location.search.substring(0).split("&");
 		arr[0] = arr[0].replace("?","");
 		// Called when "station" is selected to fetch data
-		console.log(arr[0]);
 		let datasets = d3.select('#datasets').node();
 		if (datasets.value == arr[0])
 			{
@@ -429,9 +423,35 @@ var UI = (function() {
 			datasets.value = arr[0];
 		}	
 		
-		var stationFile = 'data/stations-'.concat(datasets.value).concat('.csv')
+		var stationFile = 'data/boxes-'.concat(datasets.value).concat('/stations.csv')
 		
 		d3.csv(stationFile).then(init_stations);
+				var scans_file = "data/boxes-".concat(datasets.value).concat("/scan_list.txt"); //datasets.value
+		
+		d3.text(scans_file)
+			.then(
+				function(scan_list) {
+					allscans = scan_list.split("\n");
+
+					// Group by station-year. Example key: KBUF2010
+					function get_station_year(d) {	
+						var s = parse_scan(d);
+						return s['station'] + s['date'].substr(0,4); 
+					}
+					
+					allscans = d3.group(allscans,
+										(d) => get_station_year(d),
+										(d) => parse_scan(d)['date']);
+					
+					var arr = window.location.search.substring(1).split("&");
+		
+					if (arr[1]){
+						change_station();
+					}
+					
+					
+				}
+			);
 
 	}
 
@@ -722,8 +742,7 @@ var UI = (function() {
 		if (boxes_by_day.has(day)) {
 			
 			let boxes_for_day =  boxes_by_day.get(day);
-			let boxes_for_scan = boxes_for_day.filter(d => d.filename == scan);
-			
+			let boxes_for_scan = boxes_for_day.filter(d => d.filename.trim() == scan.trim());
 			var track_ids = boxes_for_day.map((d) => d.track_id);
 			track_ids = unique(track_ids);
 
@@ -749,6 +768,7 @@ var UI = (function() {
 			entering.each( function(d) {
 				d.track.setNode(this, this.parentNode);
 				d.track.viewed = true;
+				document.getElementById('notes').value=d.notes;
 			});
 			
 			// Merge existing groups with entering ones
@@ -757,8 +777,8 @@ var UI = (function() {
 			
 			// Set handlers for group
 			groups.classed("filtered", (d) => d.track.label !== 'swallow-roost')
-				.on("mouseenter", function (d) { d.track.select(this); } )
-				.on("mouseleave", (d) => d.track.scheduleUnselect() );
+				.on("mouseenter", function (e,d) { d.track.select(this); } )
+				.on("mouseleave", (e,d) => d.track.scheduleUnselect() );
 			
 			// Set attributes for boxes
 			groups.select("rect")
@@ -775,6 +795,7 @@ var UI = (function() {
 		 		.attr("x", b => b.x - scale*b.r + 5)
 				.attr("y", b => b.y - scale*b.r - 5)
 		 		.text(b => b.track_id + ": " + b.det_score);
+			
 			
 			var newUrl=(window.location.href.split("?")[0].concat("?").concat(datasets.value).concat("&").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
 			
@@ -831,6 +852,7 @@ var UI = (function() {
 
 		let box_cols = Object.keys(boxes[0]).filter( val => val !== "track");
 		let track_cols = ["length", "tot_score", "avg_score", "viewed", "user_labeled", "label"];
+		
 									 
 		// Assign desired track cols to box
 		for (var box of boxes) {
