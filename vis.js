@@ -18,6 +18,9 @@ var UI = (function() {
 
 	var svgs;					// Top-level svg elements
 
+	var dz;
+	var vr;
+	
 	var labels = ['non-roost',
 				  'swallow-roost',
 				  'duplicate',
@@ -427,6 +430,7 @@ var UI = (function() {
 		
 		d3.csv(stationFile).then(init_stations);
 				var scans_file = "data/boxes-".concat(datasets.value).concat("/scan_list.txt"); //datasets.value
+		        var config_file = "data/boxes-".concat(datasets.value).concat("/config.txt"); //datasets.value
 		
 		d3.text(scans_file)
 			.then(
@@ -451,6 +455,16 @@ var UI = (function() {
 					
 					
 				}
+			);
+		d3.csv(config_file)
+			.then(
+				function(scan_list) {
+					console.log(scan_list);
+					dz = scan_list[0]['dz_url'];
+					vr = scan_list[0]['vr_url'];
+					console.log(dz);
+					console.log(vr);
+					}
 			);
 
 	}
@@ -734,7 +748,7 @@ var UI = (function() {
 		
 		// $("#from_sunrise").text(s.boxes[i].from_sunrise);		
 
-		var urls = get_urls(scan);
+		var urls = get_urls(scan,dz,vr);
 		d3.select("#img1").attr("src", urls[0]);
 		d3.select("#img2").attr("src", urls[1]);
 

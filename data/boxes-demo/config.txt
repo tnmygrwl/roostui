@@ -1,2 +1,2 @@
-source
-maxwell
+dz_url,vr_url
+https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/ref1_image/,https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/rv1_image/

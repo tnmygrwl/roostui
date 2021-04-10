@@ -30961,9 +30961,9 @@
       'time': timestr
     };
   }
-  function get_urls(scan) {
-    var dz_url = "https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/ref1_image/" + scan + ".png";
-    var vr_url = "https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/rv1_image/" + scan + ".png";
+  function get_urls(scan, dz, vr) {
+    var dz_url = dz + scan + ".png";
+    var vr_url = vr + scan + ".png";
     return [dz_url, vr_url];
   }
 
@@ -30992,6 +30992,8 @@
 
     var svgs; // Top-level svg elements
 
+    var dz;
+    var vr;
     var labels = ['non-roost', 'swallow-roost', 'duplicate', 'other-roost', 'bad-track'];
     var keymap = {
       '38': prev_day,
@@ -31207,12 +31209,8 @@
       }, {
         key: "setLabel",
         value: function setLabel(label_id, label) {
-          console.log(label_id);
-          console.log(labels);
-          console.log(labels.indexOf(label_id));
           var label_id_n = labels.indexOf(label_id);
           select("#label" + label_id_n).node().checked = true;
-          console.log(label);
           this.label = label_id;
           this.user_labeled = true;
 
@@ -31266,17 +31264,13 @@
     }
 
     function save_notes() {
-      console.log("Trying to save notes");
       var arr = window.location.search.substring(1).split("&");
-      console.log(boxes);
 
       for (var i = 0; i < boxes.length; i++) {
         var a = boxes[i];
 
         if (a.filename.trim() == arr[2]) {
           var boxes_for_scan = a;
-          console.log(boxes_for_scan);
-          console.log(document.getElementById('notes').value);
           boxes_for_scan.notes = document.getElementById('notes').value;
           boxes_for_scan.user_labeled = true;
           break;
@@ -31330,12 +31324,8 @@
         }
       }
 
-      console.log(arr[1]);
-      console.log(initInd);
-
       if (arr[1] && initInd == 1) {
         stations.value = arr[1];
-        console.log(stations.value);
         var station_year = arr[1];
         var csv_file = sprintf_1("data/boxes-%s/%s_boxes.txt", datasets.value, arr[1]);
       } else {
@@ -31346,8 +31336,6 @@
         }
         else{*/
 
-        console.log(datasets.value);
-        console.log(stations.value);
         var csv_file = sprintf_1("data/boxes-%s/%s_boxes.txt", datasets.value, station_year);
       }
       /*}*/
@@ -31366,7 +31354,6 @@
         return new Box(d);
       }).then(function (box_list) {
         boxes = box_list;
-        console.log(boxes);
         boxes_by_day = group(boxes, function (d) {
           return d.date;
         }); // Create tracks
@@ -31379,7 +31366,6 @@
             return d.det_score;
           });
           var avg_score = tot_score / length;
-          console.log(v);
           return new Track({
             date: v[0].date,
             length: v.length,
@@ -31423,7 +31409,6 @@
       var arr = window.location.search.substring(0).split("&");
       arr[0] = arr[0].replace("?", ""); // Called when "station" is selected to fetch data
 
-      console.log(arr[0]);
       var datasets = select('#datasets').node();
 
       if (datasets.value == arr[0]) {
@@ -31446,10 +31431,10 @@
       csv(stationFile).then(init_stations);
       var scans_file = "data/boxes-".concat(datasets.value).concat("/scan_list.txt"); //datasets.value
 
-      console.log(scans_file);
+      var config_file = "data/boxes-".concat(datasets.value).concat("/config.txt"); //datasets.value
+
       text(scans_file).then(function (scan_list) {
-        allscans = scan_list.split("\n");
-        console.log(allscans); // Group by station-year. Example key: KBUF2010
+        allscans = scan_list.split("\n"); // Group by station-year. Example key: KBUF2010
 
         function get_station_year(d) {
           var s = parse_scan(d);
@@ -31466,6 +31451,13 @@
         if (arr[1]) {
           change_station();
         }
+      });
+      csv(config_file).then(function (scan_list) {
+        console.log(scan_list);
+        dz = scan_list[0]['dz_url'];
+        vr = scan_list[0]['vr_url'];
+        console.log(dz);
+        console.log(vr);
       });
     }
     /* -----------------------------------------
@@ -31763,7 +31755,7 @@
       // $("#from_sunrise").text(s.boxes[i].from_sunrise);		
 
 
-      var urls = get_urls(scan);
+      var urls = get_urls(scan, dz, vr);
       select("#img1").attr("src", urls[0]);
       select("#img2").attr("src", urls[1]); // If there are boxes, draw them!
 
@@ -31772,8 +31764,6 @@
         var boxes_for_scan = boxes_for_day.filter(function (d) {
           return d.filename.trim() == scan.trim();
         });
-        console.log(boxes_for_day);
-        console.log(boxes_for_scan);
         var track_ids = boxes_for_day.map(function (d) {
           return d.track_id;
         });
@@ -31793,7 +31783,6 @@
         entering.each(function (d) {
           d.track.setNode(this, this.parentNode);
           d.track.viewed = true;
-          console.log(d.notes);
           document.getElementById('notes').value = d.notes;
         }); // Merge existing groups with entering ones
 
@@ -31880,9 +31869,7 @@
       var box_cols = Object.keys(boxes[0]).filter(function (val) {
         return val !== "track";
       });
-      var track_cols = ["length", "tot_score", "avg_score", "viewed", "user_labeled", "label"];
-      console.log(box_cols);
-      console.log(track_cols); // Assign desired track cols to box
+      var track_cols = ["length", "tot_score", "avg_score", "viewed", "user_labeled", "label"]; // Assign desired track cols to box
 
       var _iterator7 = _createForOfIteratorHelper(boxes),
           _step7;
@@ -31912,7 +31899,6 @@
         _iterator7.f();
       }
 
-      console.log(boxes);
       var cols = box_cols.concat(track_cols);
       var dataStr = csvFormat(boxes, cols);
       var dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(dataStr);

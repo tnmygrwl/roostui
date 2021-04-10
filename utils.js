@@ -23,8 +23,8 @@
 		return {'station': station, 'date': datestr, 'time': timestr};
 	}
 
-	export function get_urls(scan) {
-		var dz_url = "https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/ref1_image/" + scan + ".png";
-		var vr_url = "https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/rv1_image/" + scan + ".png";
+	export function get_urls(scan,dz,vr) {
+		var dz_url = dz + scan + ".png";
+		var vr_url = vr + scan + ".png";
 		return [dz_url, vr_url];
 	}
