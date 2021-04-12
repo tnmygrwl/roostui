@@ -231,7 +231,22 @@ var UI = (function() {
 		// Populate data and set event handlers
 		
 		
-		d3.select('body').on('keydown', handle_keydown);
+		d3.select('body').on('keydown',function (e) {
+		console.log(e.target);
+		console.log(d3.select(e.target).node().tagName);
+		console.log(d3.event.target);
+		var tagName = d3.select(e.target).node().tagName;
+		if (tagName == 'INPUT' || tagName == 'SELECT' || tagName == 'TEXTAREA') {
+			return;
+		}
+		var code = e.keyCode;
+		var map = e.shiftKey ? shift_keymap : keymap;
+		if (code in map) {
+			e.preventDefault();
+			e.stopPropagation();
+			map[code]();
+		}
+	});
 
 		// Fetch list of all scans and group by station,date
 		
@@ -316,10 +331,6 @@ var UI = (function() {
 		
 		// Called when "station" is selected to fetch data
 		let stations = d3.select('#stations').node();
-		if (stations.value == arr[1])
-			{
-				return;
-			}
 		
 		stations.blur();
 
@@ -329,6 +340,8 @@ var UI = (function() {
 				return; 
 			}
 		}
+		console.log(arr[1]);
+		console.log(initInd);
 		if (arr[1] && initInd==1){
 			stations.value = arr[1];
 			var station_year = arr[1]; 
@@ -404,6 +417,7 @@ var UI = (function() {
 	}
 	
 	function change_dataset() {
+		
 		var arr = window.location.search.substring(0).split("&");
 		arr[0] = arr[0].replace("?","");
 		// Called when "station" is selected to fetch data
@@ -412,7 +426,7 @@ var UI = (function() {
 			{
 				return;
 			}
-		
+		console.log("change dataset");
 		datasets.blur();
 
 		// If work needs saving, check if user wants to proceed
@@ -448,7 +462,7 @@ var UI = (function() {
 										(d) => parse_scan(d)['date']);
 					
 					var arr = window.location.search.substring(1).split("&");
-		
+					console.log(arr[1]);
 					if (arr[1]){
 						change_station();
 					}
@@ -606,6 +620,9 @@ var UI = (function() {
 	}
 
 	function handle_keydown() {
+		console.log(d3.select(focused));
+		console.log(d3.event);
+		console.log(d3.event.target);
 		var tagName = d3.select(d3.event.target).node().tagName;
 		if (tagName == 'INPUT' || tagName == 'SELECT' || tagName == 'TEXTAREA') {
 			return;

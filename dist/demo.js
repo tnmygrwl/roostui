@@ -31255,7 +31255,25 @@
 
       csv('data/datasets.csv').then(init_datasets); // Populate data and set event handlers
 
-      select('body').on('keydown', handle_keydown); // Fetch list of all scans and group by station,date
+      select('body').on('keydown', function (e) {
+        console.log(e.target);
+        console.log(select(e.target).node().tagName);
+        console.log(undefined);
+        var tagName = select(e.target).node().tagName;
+
+        if (tagName == 'INPUT' || tagName == 'SELECT' || tagName == 'TEXTAREA') {
+          return;
+        }
+
+        var code = e.keyCode;
+        var map = e.shiftKey ? shift_keymap : keymap;
+
+        if (code in map) {
+          e.preventDefault();
+          e.stopPropagation();
+          map[code]();
+        }
+      }); // Fetch list of all scans and group by station,date
     };
 
     function reset_url() {
@@ -31311,11 +31329,6 @@
       var arr = window.location.search.substring(1).split("&"); // Called when "station" is selected to fetch data
 
       var stations = select('#stations').node();
-
-      if (stations.value == arr[1]) {
-        return;
-      }
-
       stations.blur(); // If work needs saving, check if user wants to proceed
 
       if (window.onbeforeunload) {
@@ -31323,6 +31336,9 @@
           return;
         }
       }
+
+      console.log(arr[1]);
+      console.log(initInd);
 
       if (arr[1] && initInd == 1) {
         stations.value = arr[1];
@@ -31415,6 +31431,7 @@
         return;
       }
 
+      console.log("change dataset");
       datasets.blur(); // If work needs saving, check if user wants to proceed
 
       if (window.onbeforeunload) {
@@ -31447,6 +31464,7 @@
           return parse_scan(d)['date'];
         });
         var arr = window.location.search.substring(1).split("&");
+        console.log(arr[1]);
 
         if (arr[1]) {
           change_station();
@@ -31610,23 +31628,6 @@
       }
 
       render_day();
-    }
-
-    function handle_keydown() {
-      var tagName = select(undefined).node().tagName;
-
-      if (tagName == 'INPUT' || tagName == 'SELECT' || tagName == 'TEXTAREA') {
-        return;
-      }
-
-      var code = undefined;
-      var map = undefined ? shift_keymap : keymap;
-
-      if (code in map) {
-        undefined();
-        undefined();
-        map[code]();
-      }
     }
 
     function enable_filtering() {
