@@ -20,6 +20,7 @@ var UI = (function() {
 
 	var dz;
 	var vr;
+	var swp;
 	
 	var labels = ['non-roost',
 				  'swallow-roost',
@@ -97,7 +98,7 @@ var UI = (function() {
 			
 			// Now continue selecting this track
 			Track.selectedTrack = this;
-			console.log(Track.selectedTrack);
+			//console.log(Track.selectedTrack);
 
 			// Add selected attribute to bounding box elements
 			for (const node of this.nodes.values()) {
@@ -111,7 +112,7 @@ var UI = (function() {
 				.on("mouseleave", () => this.scheduleUnselect() );
 				
 			var bbox = d3.select(node).select("rect").node().getBoundingClientRect();
-			console.log(bbox);
+			//console.log(bbox);
 			
 			tip.style("visibility", "visible")
 				.style("left", (bbox.x + bbox.width + 18) + "px")
@@ -160,7 +161,7 @@ var UI = (function() {
 			var link = tip.select("#mapper")
 				.html('<a href="#"> View on map</a>')
 				.on("click", () => mapper(box));
-			console.log(box);
+			//console.log(box);
 			
 			var entering = tip.select("#notes").html('<input type="text" id="notestext" value="'+box.notes+'"> </input></br><input type="button" value="Save Notes" id="notes-save"></input>')
 			.on("click", () => save_notes(box));
@@ -270,8 +271,8 @@ var UI = (function() {
 	
 	function save_notes(box)
 			{
-				console.log("save notes");
-				console.log(box);
+				//console.log("save notes");
+				//console.log(box);
 				box.notes = document.getElementById('notestext').value;
 				box.user_labeled = true;
 						
@@ -376,11 +377,14 @@ var UI = (function() {
 				   d.station = info['station'];
 				   d.date = info['date'];
 				   d.time = info['time'];
-				   
+				   console.log(swp);
 				   // Swap x and y!!
+				   if(swp==1){
+				   console.log("swapped");
 				   let tmp = d.y;
 				   d.y = d.x;
 				   d.x = tmp;
+				   }
 				   
 				   return new Box(d);
 			   })
@@ -413,7 +417,7 @@ var UI = (function() {
 					for (var box of boxes) {
 						box.track = tracks.get(box.track_id);
 					}
-					console.log(boxes);
+					//console.log(boxes);
 					update_tracks(); // add attributes that depend on user input
 					scans = allscans.get(station_year);	  // restrict to scans for this station-year
 					
@@ -432,6 +436,7 @@ var UI = (function() {
 		arr[0] = arr[0].replace("?","");
 		// Called when "station" is selected to fetch data
 		let datasets = d3.select('#datasets').node();
+		
 		if (datasets.value == arr[0])
 			{
 				return;
@@ -469,6 +474,8 @@ var UI = (function() {
 					allscans = d3.group(allscans,
 										(d) => get_station_year(d),
 										(d) => parse_scan(d)['date']);
+					//console.log(scans_file);
+					//console.log(allscans);
 					
 					var arr = window.location.search.substring(1).split("&");
 					
@@ -477,11 +484,14 @@ var UI = (function() {
 					
 				}
 			);
-		d3.csv(config_file)
+		d3.json(config_file)
 			.then(
 				function(scan_list) {
-					dz = scan_list[0]['dz_url'];
-					vr = scan_list[0]['vr_url'];
+					console.log(scan_list);
+					dz = scan_list['dz_url'];
+					vr = scan_list['vr_url'];
+					swp = scan_list['swap'];
+					//console.log(swp);
 					}
 			);
 
@@ -587,12 +597,12 @@ var UI = (function() {
 	function populate_days() {
 		
 		var arr = window.location.search.substring(1).split("&");
-		
 		if(arr[1] && initInd==1){
-			console.log("in here");
+			//console.log("in here");
 			scans = allscans.get(arr[1]);
 		}
-		
+		//console.log(allscans);
+		//console.log(scans);
 		days = new BoolList(scans.keys(), boxes_by_day.keys());
 		// example query http://localhost:8000/?KBUF1999&KBUF19990113_144744
 		
@@ -618,7 +628,7 @@ var UI = (function() {
 			render_day();
 		});
 		if (typeof arr[2] !== "undefined" && initInd==1){
-			console.log("days");
+			//console.log("days");
 			days.currentInd = days.items.indexOf( (arr[2].substr(4,8)) );
 			
 		}
@@ -654,7 +664,7 @@ var UI = (function() {
 
 		if(!days) return;
 		
-		console.log("render day");
+		//console.log("render day");
 		d3.select("#dateSelect").property("value", days.currentInd);
 		var arr = window.location.search.substring(1).split("&");
 		
@@ -747,7 +757,7 @@ var UI = (function() {
 	function render_frame()
 	{
 		if(!days) return;
-		console.log("render frame");
+		//console.log("render frame");
 
 		if (Track.selectedTrack) {
 			Track.selectedTrack.unselect();
@@ -781,11 +791,12 @@ var UI = (function() {
 		d3.select("#img2").attr("src", urls[1]);
 		// If there are boxes, draw them!
 		if (boxes_by_day.has(day)) {
-			console.log("boxes found");
+			//console.log("boxes found");
 			let boxes_for_day =  boxes_by_day.get(day);
 			console.log(boxes_for_day);
-			console.log(scan.trim());
+			//console.log(scan.trim());
 			let boxes_for_scan = boxes_for_day.filter(d => d.filename.trim() == scan.trim());
+			console.log(boxes_for_scan);
 			var track_ids = boxes_for_day.map((d) => d.track_id);
 			track_ids = unique(track_ids);
 			// Create color map from track_ids to ordinal color scale
@@ -793,13 +804,13 @@ var UI = (function() {
 				.range(d3.schemeSet1);
 
 			var scale = 1.2;
-
 			var groups = svgs.selectAll("g")
 				.data(boxes_for_scan, (d) => d.track_id);
-				
-			console.log(groups);
+			//console.log(groups);	
 			
+			//console.log(boxes_for_scan);
 			groups.exit().remove();
+			//console.log(groups);
 			
 			// For entering groups, create elements
 			var entering = groups.enter()
@@ -817,6 +828,7 @@ var UI = (function() {
 					d.track.originalnotes = d.notes;
 				}
 				else{
+					d.notes = "";
 					d.track.originalnotes = "";
 				}
 			});
@@ -859,8 +871,19 @@ var UI = (function() {
 		}
 		else{
 			var groups = svgs.selectAll("g");
-			groups.select("rect").remove();
-			groups.select("text").remove();
+			//groups.data([]);
+			// Set attributes for boxes
+			groups.select("rect")
+		 		.attr("x", 0)
+				.attr("y", 0)
+		 		.attr("width", 0)
+		 		.attr("height", 0)
+				.attr("fill", "none");
+			//.on("click", mapper)
+
+			// Set attributes for text
+			groups.select("text")
+		 		.text("");
 			var newUrl=(window.location.href.split("?")[0].concat("?").concat(datasets.value).concat("&").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
 			
 			history.replaceState({}, null, newUrl);

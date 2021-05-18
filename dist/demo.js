@@ -2975,6 +2975,16 @@
 
   var csv = dsvParse(csvParse);
 
+  function responseJson(response) {
+    if (!response.ok) throw new Error(response.status + " " + response.statusText);
+    if (response.status === 204 || response.status === 205) return;
+    return response.json();
+  }
+
+  function json(input, init) {
+    return fetch(input, init).then(responseJson);
+  }
+
   function initRange(domain, range) {
     switch (arguments.length) {
       case 0: break;
@@ -14202,6 +14212,7 @@
 
     var dz;
     var vr;
+    var swp;
     var labels = ['non-roost', 'swallow-roost', 'duplicate', 'other-roost', 'bad-track'];
     var keymap = {
       '38': prev_day,
@@ -14349,8 +14360,8 @@
           } // Now continue selecting this track
 
 
-          Track.selectedTrack = this;
-          console.log(Track.selectedTrack); // Add selected attribute to bounding box elements
+          Track.selectedTrack = this; //console.log(Track.selectedTrack);
+          // Add selected attribute to bounding box elements
 
           var _iterator3 = _createForOfIteratorHelper(this.nodes.values()),
               _step3;
@@ -14373,8 +14384,8 @@
           }).on("mouseleave", function () {
             return _this2.scheduleUnselect();
           });
-          var bbox = select(node).select("rect").node().getBoundingClientRect();
-          console.log(bbox);
+          var bbox = select(node).select("rect").node().getBoundingClientRect(); //console.log(bbox);
+
           tip.style("visibility", "visible").style("left", bbox.x + bbox.width + 18 + "px").style("top", bbox.y + bbox.height / 2 - 35 + "px"); // Create radio buttons and labels
 
           var entering = tip.select("#labels").selectAll("span").data(labels).enter().append("span");
@@ -14413,8 +14424,8 @@
 
           tip.select("#mapper").html('<a href="#"> View on map</a>').on("click", function () {
             return mapper(box);
-          });
-          console.log(box);
+          }); //console.log(box);
+
           var entering = tip.select("#notes").html('<input type="text" id="notestext" value="' + box.notes + '"> </input></br><input type="button" value="Save Notes" id="notes-save"></input>').on("click", function () {
             return save_notes(box);
           });
@@ -14501,8 +14512,8 @@
     };
 
     function save_notes(box) {
-      console.log("save notes");
-      console.log(box);
+      //console.log("save notes");
+      //console.log(box);
       box.notes = document.getElementById('notestext').value;
       box.user_labeled = true;
     }
@@ -14575,11 +14586,16 @@
         var info = parse_scan(d.filename);
         d.station = info['station'];
         d.date = info['date'];
-        d.time = info['time']; // Swap x and y!!
+        d.time = info['time'];
+        console.log(swp); // Swap x and y!!
 
-        var tmp = d.y;
-        d.y = d.x;
-        d.x = tmp;
+        if (swp == 1) {
+          console.log("swapped");
+          var tmp = d.y;
+          d.y = d.x;
+          d.x = tmp;
+        }
+
         return new Box(d);
       }).then(function (box_list) {
         boxes = box_list;
@@ -14616,14 +14632,14 @@
           for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
             var box = _step5.value;
             box.track = tracks.get(box.track_id);
-          }
+          } //console.log(boxes);
+
         } catch (err) {
           _iterator5.e(err);
         } finally {
           _iterator5.f();
         }
 
-        console.log(boxes);
         update_tracks(); // add attributes that depend on user input
 
         scans = allscans.get(station_year); // restrict to scans for this station-year
@@ -14675,13 +14691,17 @@
           return get_station_year(d);
         }, function (d) {
           return parse_scan(d)['date'];
-        });
+        }); //console.log(scans_file);
+        //console.log(allscans);
+
         window.location.search.substring(1).split("&");
         change_station();
       });
-      csv(config_file).then(function (scan_list) {
-        dz = scan_list[0]['dz_url'];
-        vr = scan_list[0]['vr_url'];
+      json(config_file).then(function (scan_list) {
+        console.log(scan_list);
+        dz = scan_list['dz_url'];
+        vr = scan_list['vr_url'];
+        swp = scan_list['swap']; //console.log(swp);
       });
     }
     /* -----------------------------------------
@@ -14808,9 +14828,11 @@
       var arr = window.location.search.substring(1).split("&");
 
       if (arr[1] && initInd == 1) {
-        console.log("in here");
+        //console.log("in here");
         scans = allscans.get(arr[1]);
-      }
+      } //console.log(allscans);
+      //console.log(scans);
+
 
       days = new BoolList(scans.keys(), boxes_by_day.keys()); // example query http://localhost:8000/?KBUF1999&KBUF19990113_144744
 
@@ -14831,7 +14853,7 @@
       });
 
       if (typeof arr[2] !== "undefined" && initInd == 1) {
-        console.log("days");
+        //console.log("days");
         days.currentInd = days.items.indexOf(arr[2].substr(4, 8));
       }
 
@@ -14849,8 +14871,8 @@
     }
 
     function render_day() {
-      if (!days) return;
-      console.log("render day");
+      if (!days) return; //console.log("render day");
+
       select("#dateSelect").property("value", days.currentInd);
       var arr = window.location.search.substring(1).split("&"); // Populate the dropdown
 
@@ -14947,8 +14969,7 @@
     }
 
     function render_frame() {
-      if (!days) return;
-      console.log("render frame");
+      if (!days) return; //console.log("render frame");
 
       if (Track.selectedTrack) {
         Track.selectedTrack.unselect();
@@ -14979,13 +15000,14 @@
       select("#img2").attr("src", urls[1]); // If there are boxes, draw them!
 
       if (boxes_by_day.has(day)) {
-        console.log("boxes found");
+        //console.log("boxes found");
         var boxes_for_day = boxes_by_day.get(day);
-        console.log(boxes_for_day);
-        console.log(scan.trim());
+        console.log(boxes_for_day); //console.log(scan.trim());
+
         var boxes_for_scan = boxes_for_day.filter(function (d) {
           return d.filename.trim() == scan.trim();
         });
+        console.log(boxes_for_scan);
         var track_ids = boxes_for_day.map(function (d) {
           return d.track_id;
         });
@@ -14995,9 +15017,11 @@
         var scale = 1.2;
         var groups = svgs.selectAll("g").data(boxes_for_scan, function (d) {
           return d.track_id;
-        });
-        console.log(groups);
-        groups.exit().remove(); // For entering groups, create elements
+        }); //console.log(groups);	
+        //console.log(boxes_for_scan);
+
+        groups.exit().remove(); //console.log(groups);
+        // For entering groups, create elements
 
         var entering = groups.enter().append("g").attr("class", "bbox");
         entering.append("rect");
@@ -15011,6 +15035,7 @@
           if (typeof d.notes !== 'undefined') {
             d.track.originalnotes = d.notes;
           } else {
+            d.notes = "";
             d.track.originalnotes = "";
           }
         }); // Merge existing groups with entering ones
@@ -15053,9 +15078,13 @@
         location.replace(newUrl);
         }*/
       } else {
-        var groups = svgs.selectAll("g");
-        groups.select("rect").remove();
-        groups.select("text").remove();
+        var groups = svgs.selectAll("g"); //groups.data([]);
+        // Set attributes for boxes
+
+        groups.select("rect").attr("x", 0).attr("y", 0).attr("width", 0).attr("height", 0).attr("fill", "none"); //.on("click", mapper)
+        // Set attributes for text
+
+        groups.select("text").text("");
         var newUrl = window.location.href.split("?")[0].concat("?").concat(datasets.value).concat("&").concat(frames.currentItem.substr(0, 8)).concat("&").concat(frames.currentItem);
         history.replaceState({}, null, newUrl);
         initInd = 0;
