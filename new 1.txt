@@ -1,3 +1,0 @@
-import pandas as pd
-uk = pd.read_csv("./ukdataset.txt",delimiter="|",header=None,error_bad_lines=False)
-us = pd.read_csv("./usdataset.txt",delimiter="|",header=None,error_bad_lines=False)
