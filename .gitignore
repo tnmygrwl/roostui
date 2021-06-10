@@ -1,1 +1,8 @@
 node_modules/
+**.ipynb_checkpoints
+**.DS_Store
+**~
+dist
+package-lock.json
+yarn-error.log
+yarn.lock

@@ -16,7 +16,7 @@
   }
 
   function _iterableToArray(iter) {
-    if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter);
+    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
   }
 
   function _unsupportedIterableToArray$1(o, minLen) {
@@ -41,14 +41,17 @@
   }
 
   function _iterableToArrayLimit(arr, i) {
-    if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;
+    var _i = arr && (typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]);
+
+    if (_i == null) return;
     var _arr = [];
     var _n = true;
     var _d = false;
-    var _e = undefined;
+
+    var _s, _e;
 
     try {
-      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+      for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
         _arr.push(_s.value);
 
         if (i && _arr.length === i) break;
@@ -3344,9 +3347,7 @@
 
   var slice = arr.slice;
 
-  var flat = arr.flat ? function( array ) {
-  	return arr.flat.call( array );
-  } : function( array ) {
+  var flat = function( array ) {
   	return arr.concat.apply( [], array );
   };
 
@@ -14185,7 +14186,7 @@
     return [dz_url, vr_url];
   }
 
-  function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+  function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
   function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
@@ -14586,11 +14587,11 @@
         var info = parse_scan(d.filename);
         d.station = info['station'];
         d.date = info['date'];
-        d.time = info['time'];
-        console.log(swp); // Swap x and y!!
+        d.time = info['time']; //console.log(swp);
+        // Swap x and y!!
 
         if (swp == 1) {
-          console.log("swapped");
+          //console.log("swapped");
           var tmp = d.y;
           d.y = d.x;
           d.x = tmp;
@@ -14698,7 +14699,7 @@
         change_station();
       });
       json(config_file).then(function (scan_list) {
-        console.log(scan_list);
+        //console.log(scan_list);
         dz = scan_list['dz_url'];
         vr = scan_list['vr_url'];
         swp = scan_list['swap']; //console.log(swp);
@@ -15001,13 +15002,13 @@
 
       if (boxes_by_day.has(day)) {
         //console.log("boxes found");
-        var boxes_for_day = boxes_by_day.get(day);
-        console.log(boxes_for_day); //console.log(scan.trim());
+        var boxes_for_day = boxes_by_day.get(day); //console.log(boxes_for_day);
+        //console.log(scan.trim());
 
         var boxes_for_scan = boxes_for_day.filter(function (d) {
           return d.filename.trim() == scan.trim();
-        });
-        console.log(boxes_for_scan);
+        }); //console.log(boxes_for_scan);
+
         var track_ids = boxes_for_day.map(function (d) {
           return d.track_id;
         });

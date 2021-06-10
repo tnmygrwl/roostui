@@ -377,10 +377,10 @@ var UI = (function() {
 				   d.station = info['station'];
 				   d.date = info['date'];
 				   d.time = info['time'];
-				   console.log(swp);
+				   //console.log(swp);
 				   // Swap x and y!!
 				   if(swp==1){
-				   console.log("swapped");
+					   //console.log("swapped");
 				   let tmp = d.y;
 				   d.y = d.x;
 				   d.x = tmp;
@@ -454,7 +454,7 @@ var UI = (function() {
 			datasets.value = arr[0];
 		}	
 		
-		var stationFile = 'data/boxes-'.concat(datasets.value).concat('/stations.csv')
+		var stationFile = 'data/boxes-'.concat(datasets.value).concat('/stations.csv');
 		
 		d3.csv(stationFile).then(init_stations);
 				var scans_file = "data/boxes-".concat(datasets.value).concat("/scan_list.txt"); //datasets.value
@@ -487,7 +487,7 @@ var UI = (function() {
 		d3.json(config_file)
 			.then(
 				function(scan_list) {
-					console.log(scan_list);
+					//console.log(scan_list);
 					dz = scan_list['dz_url'];
 					vr = scan_list['vr_url'];
 					swp = scan_list['swap'];
@@ -793,10 +793,10 @@ var UI = (function() {
 		if (boxes_by_day.has(day)) {
 			//console.log("boxes found");
 			let boxes_for_day =  boxes_by_day.get(day);
-			console.log(boxes_for_day);
+			//console.log(boxes_for_day);
 			//console.log(scan.trim());
 			let boxes_for_scan = boxes_for_day.filter(d => d.filename.trim() == scan.trim());
-			console.log(boxes_for_scan);
+			//console.log(boxes_for_scan);
 			var track_ids = boxes_for_day.map((d) => d.track_id);
 			track_ids = unique(track_ids);
 			// Create color map from track_ids to ordinal color scale
