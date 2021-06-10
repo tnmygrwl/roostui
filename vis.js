@@ -354,20 +354,16 @@ var UI = (function() {
 				return; 
 			}
 		}
+		var station_year, csv_file;
 		if (arr[1] && initInd==1){
 			stations.value = arr[1];
-			var station_year = arr[1]; 
-			var csv_file = sprintf("data/boxes-%s/%s_boxes.txt", datasets.value, arr[1]);
+			station_year = arr[1]; 
+			csv_file = sprintf("data/%s/%s_boxes.txt", datasets.value, arr[1]);
 		}
 		else{
-		var station_year = stations.value; // actually a "station-year", e.g., KBUF2010
-		/*if (arr[1]){
-			var csv_file = sprintf("data/boxes-nms/%s_boxes.txt", arr[1]);
+			station_year = stations.value; // actually a "station-year", e.g., KBUF2010
+			csv_file = sprintf("data/%s/%s_boxes.txt", datasets.value, station_year);
 		}
-		else{*/
-			var csv_file = sprintf("data/boxes-%s/%s_boxes.txt", datasets.value, station_year);
-		}
-		/*}*/
 		
 		
 		// Get boxes for this station
@@ -438,9 +434,9 @@ var UI = (function() {
 		let datasets = d3.select('#datasets').node();
 		
 		if (datasets.value == arr[0])
-			{
-				return;
-			}
+		{
+			return;
+		}
 		datasets.blur();
 
 		// If work needs saving, check if user wants to proceed
@@ -453,12 +449,12 @@ var UI = (function() {
 		if (arr[0] && initInd==1){
 			datasets.value = arr[0];
 		}	
-		
-		var stationFile = 'data/boxes-'.concat(datasets.value).concat('/stations.csv');
-		
+
+		var stationFile = sprintf("data/%s/stations.csv", datasets.value);
+
 		d3.csv(stationFile).then(init_stations);
-				var scans_file = "data/boxes-".concat(datasets.value).concat("/scan_list.txt"); //datasets.value
-		        var config_file = "data/boxes-".concat(datasets.value).concat("/config.txt"); //datasets.value
+		var scans_file = sprintf("data/%s/scan_list.txt", datasets.value);
+		var config_file = sprintf("data/%s/config.json", datasets.value);
 		
 		d3.text(scans_file)
 			.then(

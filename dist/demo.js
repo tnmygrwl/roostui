@@ -14565,22 +14565,17 @@
         }
       }
 
+      var station_year, csv_file;
+
       if (arr[1] && initInd == 1) {
         stations.value = arr[1];
-        var station_year = arr[1];
-        var csv_file = sprintf_1("data/boxes-%s/%s_boxes.txt", datasets.value, arr[1]);
+        station_year = arr[1];
+        csv_file = sprintf_1("data/%s/%s_boxes.txt", datasets.value, arr[1]);
       } else {
-        var station_year = stations.value; // actually a "station-year", e.g., KBUF2010
+        station_year = stations.value; // actually a "station-year", e.g., KBUF2010
 
-        /*if (arr[1]){
-        	var csv_file = sprintf("data/boxes-nms/%s_boxes.txt", arr[1]);
-        }
-        else{*/
-
-        var csv_file = sprintf_1("data/boxes-%s/%s_boxes.txt", datasets.value, station_year);
-      }
-      /*}*/
-      // Get boxes for this station
+        csv_file = sprintf_1("data/%s/%s_boxes.txt", datasets.value, station_year);
+      } // Get boxes for this station
 
 
       csv(csv_file, function (d) {
@@ -14674,12 +14669,10 @@
         datasets.value = arr[0];
       }
 
-      var stationFile = 'data/boxes-'.concat(datasets.value).concat('/stations.csv');
+      var stationFile = sprintf_1("data/%s/stations.csv", datasets.value);
       csv(stationFile).then(init_stations);
-      var scans_file = "data/boxes-".concat(datasets.value).concat("/scan_list.txt"); //datasets.value
-
-      var config_file = "data/boxes-".concat(datasets.value).concat("/config.txt"); //datasets.value
-
+      var scans_file = sprintf_1("data/%s/scan_list.txt", datasets.value);
+      var config_file = sprintf_1("data/%s/config.json", datasets.value);
       text(scans_file).then(function (scan_list) {
         allscans = scan_list.split("\n"); // Group by station-year. Example key: KBUF2010
 
