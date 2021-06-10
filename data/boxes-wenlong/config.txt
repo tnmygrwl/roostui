@@ -1,2 +1,0 @@
-{"dz_url":"http://doppler.cs.umass.edu/ref0.5_images/","vr_url":"http://doppler.cs.umass.edu/rv0.5_images/","swap":0}
-
