@@ -312,7 +312,7 @@ var UI = (function() {
 	
 	function init_stations(station_list)
 	{
-		station_list = station_list.split("\n");
+		station_list = station_list.trim().split("\n");
 
 		// Populate "station" dropdown list
 		var stations = d3.select('#stations');		
@@ -364,7 +364,7 @@ var UI = (function() {
 		var scans_file = expand_pattern(dataset_config["scans"], data);
 		function load_scans(scan_list) {
 			
-			scan_list = scan_list.split("\n");
+			scan_list = scan_list.trim().split("\n");
 
 			// filter scan list to current batch if specified in dataset_config
 			if ("filter" in dataset_config["scans"])
