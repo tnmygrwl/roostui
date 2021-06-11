@@ -1,5 +1,10 @@
 {
-    "dz_url":"http://doppler.cs.umass.edu/roost/img/wenlong/ref0.5_images/",
-    "vr_url":"http://doppler.cs.umass.edu/roost/img/wenlong/rv0.5_images/",
-    "swap":0
+    "dz_url": {
+        "pattern": "http://doppler.cs.umass.edu/roost/img/train/dz05/%s.png",
+        "fields": ["scan"]
+    },    
+    "vr_url": {
+        "pattern": "http://doppler.cs.umass.edu/roost/img/train/vr05/%s.png",
+        "fields": ["scan"]
+    },
 }

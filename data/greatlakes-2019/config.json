@@ -1,6 +1,12 @@
 {
-    "dz_url": "https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/ref1_image/",
-    "vr_url": "https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/rv1_image/",
-    "swap":1
+    "dz_url": {
+        "pattern": "https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/ref1_image/%s.png",
+        "fields": ["scan"]
+    },    
+    "vr_url": {
+        "pattern": "https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/rv1_image/%s.png",
+        "fields": ["scan"]
+    },
+    "swap": true
 }
 

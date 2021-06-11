@@ -9,7 +9,6 @@ var UI = (function() {
 	var days;					// BoolList of dates
 	var frames;					// BoolList of frames for current day
 
-	var allscans;				// List of all scans
 	var scans;					// List of scans for selected "station"
 	var boxes;					// All boxes
 	var boxes_by_day;           // Boxes grouped by day
@@ -18,9 +17,8 @@ var UI = (function() {
 
 	var svgs;					// Top-level svg elements
 
-	var dz;
-	var vr;
-	var swp;
+	var config;					// Dataset config info
+	
 	
 	var labels = ['non-roost',
 				  'swallow-roost',
@@ -237,7 +235,7 @@ var UI = (function() {
 	// Function on every page load
 	UI.init = function()
 	{
-		initInd = 1;
+		//initInd = 1;
 		svgs = d3.selectAll("#svg1, #svg2");
 
 		// Currently inactive
@@ -270,25 +268,19 @@ var UI = (function() {
 	};
 	
 	function save_notes(box)
-			{
-				//console.log("save notes");
-				//console.log(box);
-				box.notes = document.getElementById('notestext').value;
-				box.user_labeled = true;
-						
-				
-				
-				
-			}
+	{
+		//console.log("save notes");
+		//console.log(box);
+		box.notes = document.getElementById('notestext').value;
+		box.user_labeled = true;
+	}
 	
 
 	function reset_url()
 	{
 		window.location.replace(window.location.href.replace(window.location.search,''));
-		UI.init();
-		
+		UI.init();	
 	}
-	
 	
 	
 	function init_datasets(data)
@@ -319,29 +311,36 @@ var UI = (function() {
 	function init_stations(data)
 	{
 		// Populate "station" dropdown list
-		d3.select('#stations').selectAll('option').remove();
-		var stations = d3.select('#stations');
-		//d3.select('#stations').append('options');
-		
-		var options = stations.selectAll("options")
+		var stations = d3.select('#stations');		
+
+		var options = stations.selectAll("option")
 			.data(data)
-			.enter()
-			.append("option")
+			.join("option")
 			.text(function(d) {
 				return d.station;
 			});
-		//var options = dateSelect.selectAll("option")
-		//	.data(days.items);
-		// If the query gives a year, do the thing we do in change station
+		
+		// var option = options.selectAll("option");
+
+		// option.exit().remove();
+		// option.enter().append("option");
+
+		// option.
+		
+		// //var options = dateSelect.selectAll("option")
+		// //	.data(days.items);
+		// // If the query gives a year, do the thing we do in change station
 		
 		stations.on("change", change_station);
 		
 	}
 
+	
 	function change_station() {
 
 		var arr = window.location.search.substring(1).split("&");
 		
+		let datasets = d3.select('#datasets').node();
 		
 		// Called when "station" is selected to fetch data
 		let stations = d3.select('#stations').node();
@@ -355,74 +354,98 @@ var UI = (function() {
 			}
 		}
 		var station_year, csv_file;
-		if (arr[1] && initInd==1){
-			stations.value = arr[1];
-			station_year = arr[1]; 
-			csv_file = sprintf("data/%s/%s_boxes.txt", datasets.value, arr[1]);
-		}
-		else{
-			station_year = stations.value; // actually a "station-year", e.g., KBUF2010
-			csv_file = sprintf("data/%s/%s_boxes.txt", datasets.value, station_year);
-		}
+		// if (arr[1] && initInd==1){
+		// 	stations.value = arr[1];
+		// 	station_year = arr[1]; 
+		// 	csv_file = sprintf("data/%s/%s_boxes.txt", datasets.value, arr[1]);
+		// }
+		// else{
+
+		station_year = stations.value; // actually a "station-year", e.g., KBUF2010
+		csv_file = sprintf("data/%s/%s_boxes.txt", datasets.value, station_year);
 		
-		
-		// Get boxes for this station
-		d3.csv(csv_file,
-			   d => {
-				   let info = parse_scan(d.filename);
-				   d.station = info['station'];
-				   d.date = info['date'];
-				   d.time = info['time'];
-				   //console.log(swp);
-				   // Swap x and y!!
-				   if(swp==1){
-					   //console.log("swapped");
-				   let tmp = d.y;
-				   d.y = d.x;
-				   d.x = tmp;
-				   }
-				   
-				   return new Box(d);
-			   })
-			.then(
-				function(box_list) {
+		function load_scans(scan_list) {
+			var allscans = scan_list.split("\n");
+			
+			// Group by station-year. Example key: KBUF2010
+			function get_station_year(d) {	
+				var s = parse_scan(d);
+				return s['station'] + s['year'];
+			}
+			
+			allscans = d3.group(allscans,
+								(d) => get_station_year(d),
+								(d) => parse_scan(d)['date']);
 
-					boxes = box_list;
-					boxes_by_day = d3.group(boxes, d => d.date);
+			scans = allscans.get(station_year);	  // restrict to scans for this station-year
+		}
 
-					// Create tracks
-					let summarizer = function(v) { // v is the list of boxes for one track
+		// convert a row of the csv file into Box object
+		function row2box(d) {
+			let info = parse_scan(d.filename);
+			d.station = info['station'];
+			d.date = info['date'];
+			d.time = info['time'];
+			if("swap" in config && config["swap"]){
+				let tmp = d.y;
+				d.y = d.x;
+				d.x = tmp;
+			}		
+			return new Box(d);
+		}
 
-						let date = v[0].date;
-						let length = v.length;
-						let tot_score = d3.sum(v, d => d.det_score);
-						let avg_score = tot_score / length;
-						return new Track({
-							date: v[0].date,
-							length: v.length,
-							tot_score: tot_score,
-							avg_score: avg_score,
-							user_labeled: false,
-							viewed: false
-						});
-					};
-					
-					tracks = d3.rollup(boxes, summarizer, d => d.track_id);
+		// Load boxes and create tracks when new batch is selected
+		function load_boxes(box_list) {		
+			boxes = box_list;
+			boxes_by_day = d3.group(boxes, d => d.date);
+		}
 
-					// Link boxes to their tracks
-					for (var box of boxes) {
-						box.track = tracks.get(box.track_id);
-					}
-					//console.log(boxes);
-					update_tracks(); // add attributes that depend on user input
-					scans = allscans.get(station_year);	  // restrict to scans for this station-year
-					
-					// Plot detection scores
-					//plot_scores(boxes.map(d => d.det_score));
+		// Create tracks
+		function create_tracks() {
 
-					populate_days();
-					enable_filtering();
+			let summarizer = function(v) { // v is the list of boxes for one track
+				let date = v[0].date;
+				let length = v.length;
+				let tot_score = d3.sum(v, d => d.det_score);
+				let avg_score = tot_score / length;
+				return new Track({
+					date: v[0].date,
+					length: v.length,
+					tot_score: tot_score,
+					avg_score: avg_score,
+					user_labeled: false,
+					viewed: false
 				});
+			};
+			
+			tracks = d3.rollup(boxes, summarizer, d => d.track_id);
+
+			// Link boxes to their tracks
+			for (var box of boxes) {
+				box.track = tracks.get(box.track_id);
+			}
+			//console.log(boxes);
+			update_tracks(); // add attributes that depend on user input
+			
+			// Plot detection scores
+			//plot_scores(boxes.map(d => d.det_score));
+		}
+		
+		var promises = [];
+
+		// Load scans for station
+		var scans_file = sprintf("data/%s/scan_list.txt", datasets.value);
+		promises.push(d3.text(scans_file).then(load_scans));
+
+		// Get boxes for this station
+		promises.push(d3.csv(csv_file, row2box)
+					  .then(load_boxes)
+					  .then(create_tracks));
+
+		Promise.all(promises).then(function(values) {
+			populate_days();
+			enable_filtering();
+		});
 		
 	}
 	
@@ -446,48 +469,19 @@ var UI = (function() {
 			}
 		}
 		
-		if (arr[0] && initInd==1){
-			datasets.value = arr[0];
-		}	
+		// if (arr[0] && initInd==1){
+		// 	datasets.value = arr[0];
+		// }	
 
 		var stationFile = sprintf("data/%s/stations.csv", datasets.value);
 
 		d3.csv(stationFile).then(init_stations);
-		var scans_file = sprintf("data/%s/scan_list.txt", datasets.value);
 		var config_file = sprintf("data/%s/config.json", datasets.value);
 		
-		d3.text(scans_file)
-			.then(
-				function(scan_list) {
-					allscans = scan_list.split("\n");
-
-					// Group by station-year. Example key: KBUF2010
-					function get_station_year(d) {	
-						var s = parse_scan(d);
-						return s['station'] + s['date'].substr(0,4); 
-					}
-					
-					allscans = d3.group(allscans,
-										(d) => get_station_year(d),
-										(d) => parse_scan(d)['date']);
-					//console.log(scans_file);
-					//console.log(allscans);
-					
-					var arr = window.location.search.substring(1).split("&");
-					
-					change_station();
-					
-					
-				}
-			);
 		d3.json(config_file)
 			.then(
-				function(scan_list) {
-					//console.log(scan_list);
-					dz = scan_list['dz_url'];
-					vr = scan_list['vr_url'];
-					swp = scan_list['swap'];
-					//console.log(swp);
+				function(_config) {
+					config = _config;
 					}
 			);
 
@@ -593,10 +587,10 @@ var UI = (function() {
 	function populate_days() {
 		
 		var arr = window.location.search.substring(1).split("&");
-		if(arr[1] && initInd==1){
-			//console.log("in here");
-			scans = allscans.get(arr[1]);
-		}
+		// if(arr[1] && initInd==1){
+		// 	//console.log("in here");
+		// 	//scans = allscans.get(arr[1]);
+		// }
 		//console.log(allscans);
 		//console.log(scans);
 		days = new BoolList(scans.keys(), boxes_by_day.keys());
@@ -623,11 +617,11 @@ var UI = (function() {
 			days.currentInd = n.value;
 			render_day();
 		});
-		if (typeof arr[2] !== "undefined" && initInd==1){
-			//console.log("days");
-			days.currentInd = days.items.indexOf( (arr[2].substr(4,8)) );
-			
-		}
+		// if (typeof arr[2] !== "undefined" && initInd==1){
+		// 	//console.log("days");
+		// 	days.currentInd = days.items.indexOf( (arr[2].substr(4,8)) );			
+		// }
+		
 		render_day();
 	}
 
@@ -668,10 +662,10 @@ var UI = (function() {
 		// Populate the dropdown
 		var day = days.currentItem; // string representation of date
 		
-		if ((arr.length)>0 && arr!="" && initInd==1){
-			days.currentInd = days.items.indexOf( (arr[2].substr(4,8)) );
-			day = (arr[2].substr(4,8));
-		}
+		// if ((arr.length)>0 && arr!="" && initInd==1){
+		// 	days.currentInd = days.items.indexOf( (arr[2].substr(4,8)) );
+		// 	day = (arr[2].substr(4,8));
+		// }
 		var allframes = scans.get(day); // list of scans
 		var frames_with_roosts = [];
 		if (boxes_by_day.has(day)) {
@@ -699,10 +693,10 @@ var UI = (function() {
 			frames.currentInd = n.value;
 			render_frame();
 		});
-		if (typeof arr[2] !== "undefined" && initInd==1){
-			frames.currentInd = frames.items.indexOf( arr[2] );
+		// if (typeof arr[2] !== "undefined" && initInd==1){
+		// 	frames.currentInd = frames.items.indexOf( arr[2] );
 			
-		}
+		// }
 		//render_day();
 
 		render_frame();
@@ -766,23 +760,23 @@ var UI = (function() {
 		d3.select("#timeSelect").property("value", frames.currentInd);
 		
 		var arr = window.location.search.substring(1).split("&");
-		if ((arr.length)>0 && arr!="" && initInd==1){
-			days.currentInd = days.items.indexOf( (arr[2].substr(4,8)) );
-			//days.currentItem = (arr[2].substr(4,8));
-			day = (arr[2].substr(4,8));
-			d3.select("#dateSelect").property("value", days.currentInd);
-			arr[2]=arr[2].concat("\r");
-			frames.currentInd = frames.items.indexOf( arr[2] );
-			//frames.currentItem = arr[2];
-			d3.select("#timeSelect").property("value", frames.currentInd);
-		}
+		// if ((arr.length)>0 && arr!="" && initInd==1){
+		// 	days.currentInd = days.items.indexOf( (arr[2].substr(4,8)) );
+		// 	//days.currentItem = (arr[2].substr(4,8));
+		// 	day = (arr[2].substr(4,8));
+		// 	d3.select("#dateSelect").property("value", days.currentInd);
+		// 	arr[2]=arr[2].concat("\r");
+		// 	frames.currentInd = frames.items.indexOf( arr[2] );
+		// 	//frames.currentItem = arr[2];
+		// 	d3.select("#timeSelect").property("value", frames.currentInd);
+		// }
 		/**/
 		
 		var scan = frames.currentItem;
 		
 		// $("#from_sunrise").text(s.boxes[i].from_sunrise);		
 
-		var urls = get_urls(scan,dz,vr);
+		var urls = get_urls(scan, config);
 		d3.select("#img1").attr("src", urls[0]);
 		d3.select("#img2").attr("src", urls[1]);
 		// If there are boxes, draw them!
@@ -858,7 +852,7 @@ var UI = (function() {
 			var newUrl=(window.location.href.split("?")[0].concat("?").concat(datasets.value).concat("&").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
 			
 			history.replaceState({}, null, newUrl);
-			initInd = 0;
+			//initInd = 0;
 			
 			/*if (!(window.location.search.substring(1)==frames.currentItem.substr(0,8)+"&"+frames.currentItem))
 			{
@@ -883,7 +877,7 @@ var UI = (function() {
 			var newUrl=(window.location.href.split("?")[0].concat("?").concat(datasets.value).concat("&").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
 			
 			history.replaceState({}, null, newUrl);
-			initInd = 0;
+			//initInd = 0;
 		}
 		
 	}	
