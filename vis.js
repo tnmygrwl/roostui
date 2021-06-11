@@ -320,19 +320,7 @@ var UI = (function() {
 				return d.station;
 			});
 		
-		// var option = options.selectAll("option");
-
-		// option.exit().remove();
-		// option.enter().append("option");
-
-		// option.
-		
-		// //var options = dateSelect.selectAll("option")
-		// //	.data(days.items);
-		// // If the query gives a year, do the thing we do in change station
-		
 		stations.on("change", change_station);
-		
 	}
 
 	
@@ -456,10 +444,10 @@ var UI = (function() {
 		// Called when "station" is selected to fetch data
 		let datasets = d3.select('#datasets').node();
 		
-		if (datasets.value == arr[0])
-		{
-			return;
-		}
+		// if (datasets.value == arr[0])
+		// {
+		// 	return;
+		// }
 		datasets.blur();
 
 		// If work needs saving, check if user wants to proceed
@@ -482,7 +470,7 @@ var UI = (function() {
 			.then(
 				function(_config) {
 					config = _config;
-					}
+				}
 			);
 
 	}
