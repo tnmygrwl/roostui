@@ -1,11 +1,20 @@
 {
-    "dz_url": {
+    "dz": {
         "pattern": "https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/ref1_image/%s.png",
         "fields": ["scan"]
     },    
-    "vr_url": {
+    "vr": {
         "pattern": "https://maxwell.cs.umass.edu/roost-label/all_east_scans_results_split/birdcast_1995_2018/rv1_image/%s.png",
         "fields": ["scan"]
+    },
+    "boxes" : {
+        "pattern": "data/%s/%s_boxes.txt",
+        "fields": ["dataset", "batchid"]
+    },
+    "scans" : {
+        "pattern": "data/%s/scan_list.txt",
+        "fields": ["dataset"],
+        "filter": ["%s%s", ["station", "year"]]
     },
     "swap": true
 }

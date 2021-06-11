@@ -28,21 +28,46 @@ export function parse_scan(scan) {
 			'station': station,
 			'date': datestr,
 			'time': timestr,
-			'year': year,
-			'month': month,
-			'day': day};
+			'year': parseInt(year),
+			'month': parseInt(month),
+			'day': parseInt(day)};
 }
 
 export function get_urls(scan, config) {
 
 	var scan_fields = parse_scan(scan);
 
-	var dz_url = sprintf(config["dz_url"]["pattern"],
-						 config["dz_url"]["fields"].map( f => scan_fields[f]));
-
+	var dz = expand_pattern(config["dz"], scan_fields);
+	var vr = expand_pattern(config["vr"], scan_fields);
 	
-	var vr_url = sprintf(config["vr_url"]["pattern"],
-						 config["vr_url"]["fields"].map( f => scan_fields[f]));
-								
-	return [dz_url, vr_url];
+	return [dz, vr];
+}
+
+export function expand_pattern(spec, data) {
+
+	var pattern, fields;
+
+	/*
+	  spec looks like one of the following
+	  
+	  spec = { 
+	     "pattern" : <sprintf like pattern>
+		 "fields" : <list of field names>
+	  }
+
+	  spec = [<pattern>, <fieldnames>]
+	 */
+	
+	if ("pattern" in spec) {	// dict form
+		pattern = spec["pattern"];
+		fields = spec["fields"];
+	}
+	else						// array form
+	{
+		pattern = spec[0];
+		fields = spec[1];
+	}
+
+	var values = fields.map( k => data[k] );
+	return sprintf(pattern, ...values);
 }

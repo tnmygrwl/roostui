@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import sprintf from 'sprintf';
 import $ from './node_modules/jquery/dist/jquery.js'; 
-import { parse_day, parse_time, parse_scan, get_urls } from './utils.js';
+import { parse_day, parse_time, parse_scan, get_urls, expand_pattern } from './utils.js';
 var UI = (function() {
 
 	var UI = {};
@@ -17,7 +17,8 @@ var UI = (function() {
 
 	var svgs;					// Top-level svg elements
 
-	var config;					// Dataset config info
+	var config;                 // UI config
+	var dataset_config;         // Dataset config info
 	
 	
 	var labels = ['non-roost',
@@ -238,6 +239,8 @@ var UI = (function() {
 		//initInd = 1;
 		svgs = d3.selectAll("#svg1, #svg2");
 
+
+		
 		// Currently inactive
 		d3.select("#export").on("click", export_sequences);
 		// d3.json('data/labels.json').then(init_labels);
@@ -245,7 +248,8 @@ var UI = (function() {
 		d3.select("#reset").on("click", reset_url);
 		d3.select("#notes-save").on("click", save_notes);
 		// Populate datasets
-		d3.csv('data/datasets.csv').then(init_datasets);
+		
+		d3.json('data/config.json').then(init_datasets);
 		// Populate data and set event handlers
 		
 		
@@ -285,20 +289,18 @@ var UI = (function() {
 	
 	function init_datasets(data)
 	{
+		config = data;
+		
 		// Populate "station" dropdown list
-		
-		var datasets = d3.select('#datasets');
-		
+		var datasets = d3.select('#datasets');		
 		
 		var options = datasets.selectAll("options")
-			.data(data)
+			.data(config['datasets'])
 			.enter()
 			.append("option")
-			.text(function(d) {
-				return d.dataset;
-			});
-		// If the query gives a year, do the thing we do in change station
+			.text(d => d);
 		
+		// If the query gives a year, do the thing we do in change station		
 		datasets.on("change", change_dataset);
 		var arr = window.location.search.substring(0).split("&");
 		
@@ -308,17 +310,17 @@ var UI = (function() {
 				
 	}
 	
-	function init_stations(data)
+	function init_stations(station_list)
 	{
+		station_list = station_list.split("\n");
+
 		// Populate "station" dropdown list
 		var stations = d3.select('#stations');		
 
 		var options = stations.selectAll("option")
-			.data(data)
+			.data(station_list)
 			.join("option")
-			.text(function(d) {
-				return d.station;
-			});
+			.text(d => d);
 		
 		stations.on("change", change_station);
 	}
@@ -341,7 +343,8 @@ var UI = (function() {
 				return; 
 			}
 		}
-		var station_year, csv_file;
+
+
 		// if (arr[1] && initInd==1){
 		// 	stations.value = arr[1];
 		// 	station_year = arr[1]; 
@@ -349,23 +352,30 @@ var UI = (function() {
 		// }
 		// else{
 
-		station_year = stations.value; // actually a "station-year", e.g., KBUF2010
-		csv_file = sprintf("data/%s/%s_boxes.txt", datasets.value, station_year);
+		var station_year = stations.value; // actually a "station-year", e.g., KBUF2010
+		var batchid = stations.value;
 		
+		var data = {
+			"dataset" : datasets.value,
+			"batchid" : station_year
+		};
+		
+		var csv_file = expand_pattern(dataset_config["boxes"], data);
+		var scans_file = expand_pattern(dataset_config["scans"], data);
 		function load_scans(scan_list) {
-			var allscans = scan_list.split("\n");
 			
-			// Group by station-year. Example key: KBUF2010
-			function get_station_year(d) {	
-				var s = parse_scan(d);
-				return s['station'] + s['year'];
-			}
-			
-			allscans = d3.group(allscans,
-								(d) => get_station_year(d),
-								(d) => parse_scan(d)['date']);
+			scan_list = scan_list.split("\n");
 
-			scans = allscans.get(station_year);	  // restrict to scans for this station-year
+			// filter scan list to current batch if specified in dataset_config
+			if ("filter" in dataset_config["scans"])
+			{
+				scan_list = scan_list.filter( 
+					d => expand_pattern(dataset_config["scans"]["filter"], parse_scan(d)) == batchid
+				);
+			}
+
+			// group scans by day
+			scans = d3.group(scan_list, (d) => parse_scan(d)['date']);
 		}
 
 		// convert a row of the csv file into Box object
@@ -374,7 +384,7 @@ var UI = (function() {
 			d.station = info['station'];
 			d.date = info['date'];
 			d.time = info['time'];
-			if("swap" in config && config["swap"]){
+			if("swap" in dataset_config && dataset_config["swap"]){
 				let tmp = d.y;
 				d.y = d.x;
 				d.x = tmp;
@@ -383,13 +393,9 @@ var UI = (function() {
 		}
 
 		// Load boxes and create tracks when new batch is selected
-		function load_boxes(box_list) {		
-			boxes = box_list;
+		function load_boxes(_boxes) {		
+			boxes = _boxes;
 			boxes_by_day = d3.group(boxes, d => d.date);
-		}
-
-		// Create tracks
-		function create_tracks() {
 
 			let summarizer = function(v) { // v is the list of boxes for one track
 				let date = v[0].date;
@@ -421,20 +427,11 @@ var UI = (function() {
 		
 		var promises = [];
 
-		// Load scans for station
-		var scans_file = sprintf("data/%s/scan_list.txt", datasets.value);
-		promises.push(d3.text(scans_file).then(load_scans));
-
-		// Get boxes for this station
-		promises.push(d3.csv(csv_file, row2box)
-					  .then(load_boxes)
-					  .then(create_tracks));
-
-		Promise.all(promises).then(function(values) {
-			populate_days();
-			enable_filtering();
-		});
-		
+		// Load scans and boxes
+		Promise.all([
+			d3.text(scans_file).then(load_scans),
+			d3.csv(csv_file, row2box).then(load_boxes)
+		]).then( v => {populate_days(); enable_filtering(); } );
 	}
 	
 	function change_dataset() {
@@ -461,15 +458,15 @@ var UI = (function() {
 		// 	datasets.value = arr[0];
 		// }	
 
-		var stationFile = sprintf("data/%s/stations.csv", datasets.value);
+		var stationFile = sprintf("data/%s/batches.txt", datasets.value);
 
-		d3.csv(stationFile).then(init_stations);
-		var config_file = sprintf("data/%s/config.json", datasets.value);
+		d3.text(stationFile).then(init_stations);
+		var dataset_config_file = sprintf("data/%s/config.json", datasets.value);
 		
-		d3.json(config_file)
+		d3.json(dataset_config_file)
 			.then(
-				function(_config) {
-					config = _config;
+				function(_dataset_config) {
+					dataset_config = _dataset_config;
 				}
 			);
 
@@ -764,7 +761,7 @@ var UI = (function() {
 		
 		// $("#from_sunrise").text(s.boxes[i].from_sunrise);		
 
-		var urls = get_urls(scan, config);
+		var urls = get_urls(scan, dataset_config);
 		d3.select("#img1").attr("src", urls[0]);
 		d3.select("#img2").attr("src", urls[1]);
 		// If there are boxes, draw them!
