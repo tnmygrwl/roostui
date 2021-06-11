@@ -6,5 +6,5 @@
     "vr_url": {
         "pattern": "http://doppler.cs.umass.edu/roost/img/train/vr05/%s.png",
         "fields": ["scan"]
-    },
+    }
 }
