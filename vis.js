@@ -234,43 +234,31 @@ var UI = (function() {
 	Track.unselectTimeout = null;
 
 	// Function on every page load
-	UI.init = function()
+	UI.init = function(data)
 	{
+		config = data;
+
 		//initInd = 1;
 		svgs = d3.selectAll("#svg1, #svg2");
-
-
-		
-		// Currently inactive
+				
+		// Populate data and set event handlers	
 		d3.select("#export").on("click", export_sequences);
-		// d3.json('data/labels.json').then(init_labels);
-		// d3.select("#comment").on("change paste keyup", set_comment);
 		d3.select("#reset").on("click", reset_url);
 		d3.select("#notes-save").on("click", save_notes);
-		// Populate datasets
-		
-		d3.json('data/config.json').then(init_datasets);
-		// Populate data and set event handlers
-		
-		
-		d3.select('body').on('keydown',function (e) {
-		var tagName = d3.select(e.target).node().tagName;
-		if (tagName == 'INPUT' || tagName == 'SELECT' || tagName == 'TEXTAREA') {
-			return;
-		}
-		var code = e.keyCode;
-		var map = e.shiftKey ? shift_keymap : keymap;
-		if (code in map) {
-			e.preventDefault();
-			e.stopPropagation();
-			map[code]();
-		}
-	});
+		d3.select('body').on('keydown', handle_keydown);
 
-		// Fetch list of all scans and group by station,date
+		// Populate datasets
+		var datasets = d3.select('#datasets');
+		var options = datasets.selectAll("options")
+			.data(config['datasets'])
+			.enter()
+			.append("option")
+			.text(d => d);
 		
+		datasets.on("change", change_dataset);
+		var arr = window.location.search.substring(0).split("&");		
 	};
-	
+		
 	function save_notes(box)
 	{
 		//console.log("save notes");
@@ -283,33 +271,10 @@ var UI = (function() {
 	function reset_url()
 	{
 		window.location.replace(window.location.href.replace(window.location.search,''));
-		UI.init();	
+		d3.json('data/config.json').then(UI.init);
 	}
 	
-	
-	function init_datasets(data)
-	{
-		config = data;
 		
-		// Populate "station" dropdown list
-		var datasets = d3.select('#datasets');		
-		
-		var options = datasets.selectAll("options")
-			.data(config['datasets'])
-			.enter()
-			.append("option")
-			.text(d => d);
-		
-		// If the query gives a year, do the thing we do in change station		
-		datasets.on("change", change_dataset);
-		var arr = window.location.search.substring(0).split("&");
-		
-		if(arr[0]){
-		change_dataset();}
-		
-				
-	}
-	
 	function init_stations(station_list)
 	{
 		station_list = station_list.trim().split("\n");
@@ -425,8 +390,6 @@ var UI = (function() {
 			//plot_scores(boxes.map(d => d.det_score));
 		}
 		
-		var promises = [];
-
 		// Load scans and boxes
 		Promise.all([
 			d3.text(scans_file).then(load_scans),
@@ -458,18 +421,13 @@ var UI = (function() {
 		// 	datasets.value = arr[0];
 		// }	
 
-		var stationFile = sprintf("data/%s/batches.txt", datasets.value);
-
-		d3.text(stationFile).then(init_stations);
+		var stationFile = sprintf("data/%s/batches.txt", datasets.value);		
 		var dataset_config_file = sprintf("data/%s/config.json", datasets.value);
-		
-		d3.json(dataset_config_file)
-			.then(
-				function(_dataset_config) {
-					dataset_config = _dataset_config;
-				}
-			);
 
+		Promise.all([
+			d3.text(stationFile).then(init_stations),
+			d3.json(dataset_config_file).then( cfg => { dataset_config = cfg; } )
+		]).then( change_station );
 	}
 
 
@@ -610,16 +568,16 @@ var UI = (function() {
 		render_day();
 	}
 
-	function handle_keydown() {
-		var tagName = d3.select(d3.event.target).node().tagName;
+	function handle_keydown(e) {
+		var tagName = d3.select(e.target).node().tagName;
 		if (tagName == 'INPUT' || tagName == 'SELECT' || tagName == 'TEXTAREA') {
 			return;
 		}
-		var code = d3.event.keyCode;
-		var map = d3.event.shiftKey ? shift_keymap : keymap;
+		var code = e.keyCode;
+		var map = e.shiftKey ? shift_keymap : keymap;
 		if (code in map) {
-			d3.event.preventDefault();
-			d3.event.stopPropagation();
+			e.preventDefault();
+			e.stopPropagation();
 			map[code]();
 		}
 	}
@@ -630,7 +588,7 @@ var UI = (function() {
 	}
 
 	function change_filter(d, i, nodes) {
-		nodes[i].blur();
+		// nodes[i].blur();
 		update_tracks();
 		render_frame();
 	}
@@ -939,4 +897,5 @@ var UI = (function() {
 	return UI;
 }());
 
-UI.init();
+
+d3.json('data/config.json').then(UI.init);
