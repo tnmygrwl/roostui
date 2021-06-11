@@ -27,6 +27,13 @@ var UI = (function() {
 				  'other-roost',
 				  'bad-track'];
 	
+	var default_filters = {
+		"detections_min" : 2,
+		"high_quality_detections_min" : 2,
+		"score_min" : 0.05,
+		"avg_score_min" : -1.0
+	};
+
 	var keymap = {
 		'38': prev_day, // up
 		'40': next_day, // down
@@ -256,9 +263,19 @@ var UI = (function() {
 			.text(d => d);
 		
 		datasets.on("change", change_dataset);
-		var arr = window.location.search.substring(0).split("&");		
+		var arr = window.location.search.substring(0).split("&");
+
+		set_filters(default_filters);
 	};
-		
+
+
+	function set_filters(data) {
+		for (var key in default_filters) {
+			var val = key in data ? data[key] : default_filters[key];
+			document.getElementById(key).value = val;
+		}
+	}
+	
 	function save_notes(box)
 	{
 		//console.log("save notes");
@@ -396,7 +413,18 @@ var UI = (function() {
 			d3.csv(csv_file, row2box).then(load_boxes)
 		]).then( v => {populate_days(); enable_filtering(); } );
 	}
+
 	
+	function init_dataset(_config) {
+		dataset_config = _config;		
+		if ("filtering" in dataset_config) {
+			set_filters(dataset_config["filtering"]);
+		}
+		else {
+			set_filters(default_filters);
+		}
+	}
+
 	function change_dataset() {
 		
 		var arr = window.location.search.substring(0).split("&");
@@ -426,9 +454,10 @@ var UI = (function() {
 
 		Promise.all([
 			d3.text(stationFile).then(init_stations),
-			d3.json(dataset_config_file).then( cfg => { dataset_config = cfg; } )
+			d3.json(dataset_config_file).then(init_dataset)
 		]).then( change_station );
 	}
+
 
 
 	/* -----------------------------------------
