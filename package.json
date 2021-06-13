@@ -2,7 +2,7 @@
   "name": "roostui",
   "version": "0.1.0",
   "description": "Roost visualization and annotation web interface",
-  "main": "vis.js",
+  "main": "js/vis.js",
   "scripts": {
     "build": "npm-run-all -s build:rollup build:rollup:dist",
     "build:rollup": "rollup -c",

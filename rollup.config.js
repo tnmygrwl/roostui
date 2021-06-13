@@ -12,7 +12,7 @@ import babel from '@rollup/plugin-babel';
 const PRODUCTION = process.env['BUILD'] === 'production';
 
 export default {
-  input: join('', 'vis.js'),
+  input: join('js', 'vis.js'),
   output: {
     file: join('dist', PRODUCTION ? 'demo.min.js' : 'demo.js'),
     format: 'iife',

@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import sprintf from 'sprintf';
-import $ from './node_modules/jquery/dist/jquery.js'; 
+import $ from 'jquery'; 
 import { parse_day, parse_time, parse_scan, get_urls, expand_pattern } from './utils.js';
 import { BoolList } from './BoolList.js';
 
