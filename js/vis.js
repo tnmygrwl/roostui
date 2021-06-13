@@ -7,7 +7,6 @@ import { BoolList } from './BoolList.js';
 var UI = (function() {
 
 	var UI = {};
-	var initInd;
 	var days;					// BoolList of dates
 	var frames;					// BoolList of frames for current day
 
@@ -247,7 +246,6 @@ var UI = (function() {
 	{
 		config = data;
 
-		//initInd = 1;
 		svgs = d3.selectAll("#svg1, #svg2");
 				
 		// Populate data and set event handlers	
@@ -280,8 +278,6 @@ var UI = (function() {
 	
 	function save_notes(box)
 	{
-		//console.log("save notes");
-		//console.log(box);
 		box.notes = document.getElementById('notestext').value;
 		box.user_labeled = true;
 	}
@@ -327,14 +323,6 @@ var UI = (function() {
 				return; 
 			}
 		}
-
-
-		// if (arr[1] && initInd==1){
-		// 	stations.value = arr[1];
-		// 	station_year = arr[1]; 
-		// 	csv_file = sprintf("data/%s/%s_boxes.txt", datasets.value, arr[1]);
-		// }
-		// else{
 
 		var station_year = stations.value; // actually a "station-year", e.g., KBUF2010
 		var batchid = stations.value;
@@ -402,7 +390,6 @@ var UI = (function() {
 			for (var box of boxes) {
 				box.track = tracks.get(box.track_id);
 			}
-			//console.log(boxes);
 			update_tracks(); // add attributes that depend on user input
 			
 			// Plot detection scores
@@ -434,10 +421,6 @@ var UI = (function() {
 		// Called when "station" is selected to fetch data
 		let datasets = d3.select('#datasets').node();
 		
-		// if (datasets.value == arr[0])
-		// {
-		// 	return;
-		// }
 		datasets.blur();
 
 		// If work needs saving, check if user wants to proceed
@@ -447,10 +430,6 @@ var UI = (function() {
 			}
 		}
 		
-		// if (arr[0] && initInd==1){
-		// 	datasets.value = arr[0];
-		// }	
-
 		var stationFile = sprintf("data/%s/batches.txt", datasets.value);		
 		var dataset_config_file = sprintf("data/%s/config.json", datasets.value);
 
@@ -463,12 +442,6 @@ var UI = (function() {
 	function populate_days() {
 		
 		var arr = window.location.search.substring(1).split("&");
-		// if(arr[1] && initInd==1){
-		// 	//console.log("in here");
-		// 	//scans = allscans.get(arr[1]);
-		// }
-		//console.log(allscans);
-		//console.log(scans);
 		days = new BoolList(scans.keys(), boxes_by_day.keys());
 		// example query http://localhost:8000/?KBUF1999&KBUF19990113_144744
 		
@@ -493,10 +466,6 @@ var UI = (function() {
 			days.currentInd = n.value;
 			render_day();
 		});
-		// if (typeof arr[2] !== "undefined" && initInd==1){
-		// 	//console.log("days");
-		// 	days.currentInd = days.items.indexOf( (arr[2].substr(4,8)) );			
-		// }
 		
 		render_day();
 	}
@@ -530,18 +499,12 @@ var UI = (function() {
 
 		if(!days) return;
 		
-		//console.log("render day");
 		d3.select("#dateSelect").property("value", days.currentInd);
 		var arr = window.location.search.substring(1).split("&");
-		
-		
+				
 		// Populate the dropdown
 		var day = days.currentItem; // string representation of date
 		
-		// if ((arr.length)>0 && arr!="" && initInd==1){
-		// 	days.currentInd = days.items.indexOf( (arr[2].substr(4,8)) );
-		// 	day = (arr[2].substr(4,8));
-		// }
 		var allframes = scans.get(day); // list of scans
 		var frames_with_roosts = [];
 		if (boxes_by_day.has(day)) {
@@ -569,12 +532,7 @@ var UI = (function() {
 			frames.currentInd = n.value;
 			render_frame();
 		});
-		// if (typeof arr[2] !== "undefined" && initInd==1){
-		// 	frames.currentInd = frames.items.indexOf( arr[2] );
-			
-		// }
-		//render_day();
-
+		
 		render_frame();
 	}
 
@@ -623,31 +581,15 @@ var UI = (function() {
 	function render_frame()
 	{
 		if(!days) return;
-		//console.log("render frame");
 
 		if (Track.selectedTrack) {
 			Track.selectedTrack.unselect();
 		}
 
-		var day = days.currentItem;
-		//console.log(frames.currentItem);
-		
+		var day = days.currentItem;		
 		
 		d3.select("#timeSelect").property("value", frames.currentInd);
-		
-		var arr = window.location.search.substring(1).split("&");
-		// if ((arr.length)>0 && arr!="" && initInd==1){
-		// 	days.currentInd = days.items.indexOf( (arr[2].substr(4,8)) );
-		// 	//days.currentItem = (arr[2].substr(4,8));
-		// 	day = (arr[2].substr(4,8));
-		// 	d3.select("#dateSelect").property("value", days.currentInd);
-		// 	arr[2]=arr[2].concat("\r");
-		// 	frames.currentInd = frames.items.indexOf( arr[2] );
-		// 	//frames.currentItem = arr[2];
-		// 	d3.select("#timeSelect").property("value", frames.currentInd);
-		// }
-		/**/
-		
+				
 		var scan = frames.currentItem;
 		
 		// $("#from_sunrise").text(s.boxes[i].from_sunrise);		
@@ -655,106 +597,70 @@ var UI = (function() {
 		var urls = get_urls(scan, dataset_config);
 		d3.select("#img1").attr("src", urls[0]);
 		d3.select("#img2").attr("src", urls[1]);
-		// If there are boxes, draw them!
-		if (boxes_by_day.has(day)) {
-			//console.log("boxes found");
-			let boxes_for_day =  boxes_by_day.get(day);
-			//console.log(boxes_for_day);
-			//console.log(scan.trim());
-			let boxes_for_scan = boxes_for_day.filter(d => d.filename.trim() == scan.trim());
-			//console.log(boxes_for_scan);
-			var track_ids = boxes_for_day.map((d) => d.track_id);
-			track_ids = unique(track_ids);
-			// Create color map from track_ids to ordinal color scale
-			var myColor = d3.scaleOrdinal().domain(track_ids)
-				.range(d3.schemeSet1);
 
-			var scale = 1.2;
-			var groups = svgs.selectAll("g")
-				.data(boxes_for_scan, (d) => d.track_id);
-			//console.log(groups);	
-			
-			//console.log(boxes_for_scan);
-			groups.exit().remove();
-			//console.log(groups);
-			
-			// For entering groups, create elements
-			var entering = groups.enter()
-				.append("g")
-				.attr("class", "bbox");
-			entering.append("rect");
-			entering.append("text");
+		let boxes_for_day = boxes_by_day.has(day) ? boxes_by_day.get(day) : [];
+		let boxes_for_scan = boxes_for_day.filter(d => d.filename.trim() == scan.trim());
+		var track_ids = boxes_for_day.map((d) => d.track_id);
+		track_ids = unique(track_ids);
 
-			// Register each new DOM element with the track and mark the track as viewed
-			entering.each( function(d) {
-				d.track.setNode(this, this.parentNode);
-				d.track.viewed = true;
-				d.track.originallabel = d.track.label;
-				if(typeof d.notes !== 'undefined'){
-					d.track.originalnotes = d.notes;
-				}
-				else{
-					d.notes = "";
-					d.track.originalnotes = "";
-				}
-			});
-			
-			// Merge existing groups with entering ones
-			groups = entering.merge(groups);
+		// Create color map from track_ids to ordinal color scale
+		var myColor = d3.scaleOrdinal().domain(track_ids)
+			.range(d3.schemeSet1);
 
-			
-			// Set handlers for group
-			groups.classed("filtered", (d) => d.track.label !== 'swallow-roost')
-				.on("mouseenter", function (e,d) { d.track.select(this); } )
-				.on("mouseleave", (e,d) => d.track.scheduleUnselect() );
-			
-			// Set attributes for boxes
-			groups.select("rect")
-		 		.attr("x", b => b.x - scale*b.r)
-				.attr("y", b => b.y - scale*b.r)
-		 		.attr("width", b => 2*scale*b.r)
-		 		.attr("height", b => 2*scale*b.r)
-				.attr("stroke", d => myColor(d.track_id))
-				.attr("fill", "none");
-			//.on("click", mapper)
+		var scale = 1.2;
+		var groups = svgs.selectAll("g")
+			.data(boxes_for_scan, (d) => d.track_id);
 
-			// Set attributes for text
-			groups.select("text")
-		 		.attr("x", b => b.x - scale*b.r + 5)
-				.attr("y", b => b.y - scale*b.r - 5)
-		 		.text(b => b.track_id + ": " + b.det_score);
-			
-			
-			var newUrl=(window.location.href.split("?")[0].concat("?").concat(datasets.value).concat("&").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
-			
-			history.replaceState({}, null, newUrl);
-			//initInd = 0;
-			
-			/*if (!(window.location.search.substring(1)==frames.currentItem.substr(0,8)+"&"+frames.currentItem))
-			{
-			location.replace(newUrl);
-			}*/
-		}
-		else{
-			var groups = svgs.selectAll("g");
-			//groups.data([]);
-			// Set attributes for boxes
-			groups.select("rect")
-		 		.attr("x", 0)
-				.attr("y", 0)
-		 		.attr("width", 0)
-		 		.attr("height", 0)
-				.attr("fill", "none");
-			//.on("click", mapper)
+		groups.exit().remove();
+		
+		// For entering groups, create elements
+		var entering = groups.enter()
+			.append("g")
+			.attr("class", "bbox");
+		entering.append("rect");
+		entering.append("text");
 
-			// Set attributes for text
-			groups.select("text")
-		 		.text("");
-			var newUrl=(window.location.href.split("?")[0].concat("?").concat(datasets.value).concat("&").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
-			
-			history.replaceState({}, null, newUrl);
-			//initInd = 0;
-		}
+		// Register each new DOM element with the track and mark the track as viewed
+		entering.each( function(d) {
+			d.track.setNode(this, this.parentNode);
+			d.track.viewed = true;
+			d.track.originallabel = d.track.label;
+			if(typeof d.notes !== 'undefined'){
+				d.track.originalnotes = d.notes;
+			}
+			else{
+				d.notes = "";
+				d.track.originalnotes = "";
+			}
+		});
+		
+		// Merge existing groups with entering ones
+		groups = entering.merge(groups);
+		
+		// Set handlers for group
+		groups.classed("filtered", (d) => d.track.label !== 'swallow-roost')
+			.on("mouseenter", function (e,d) { d.track.select(this); } )
+			.on("mouseleave", (e,d) => d.track.scheduleUnselect() );
+		
+		// Set attributes for boxes
+		groups.select("rect")
+		 	.attr("x", b => b.x - scale*b.r)
+			.attr("y", b => b.y - scale*b.r)
+		 	.attr("width", b => 2*scale*b.r)
+		 	.attr("height", b => 2*scale*b.r)
+			.attr("stroke", d => myColor(d.track_id))
+			.attr("fill", "none");
+		//.on("click", mapper)
+
+		// Set attributes for text
+		groups.select("text")
+		 	.attr("x", b => b.x - scale*b.r + 5)
+			.attr("y", b => b.y - scale*b.r - 5)
+		 	.text(b => b.track_id + ": " + b.det_score);		
+		
+		var newUrl=(window.location.href.split("?")[0].concat("?").concat(datasets.value).concat("&").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
+		
+		history.replaceState({}, null, newUrl);
 		
 	}	
 
