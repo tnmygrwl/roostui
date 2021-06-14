@@ -260,7 +260,6 @@ var UI = (function() {
 				
 		// Populate data and set event handlers	
 		d3.select("#export").on("click", export_sequences);
-		d3.select("#reset").on("click", reset_url);
 		d3.select("#notes-save").on("click", save_notes);
 		d3.select('body').on('keydown', handle_keydown);
 
@@ -306,11 +305,6 @@ var UI = (function() {
 		box.user_labeled = true;
 	}
 	
-	function reset_url()
-	{
-		window.location.replace(window.location.href.replace(window.location.search,''));
-		d3.json('data/config.json').then(UI.init);
-	}
 
 	/* -----------------------------------------
 	 * Filtering
