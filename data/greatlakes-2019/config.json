@@ -9,7 +9,7 @@
     },
     "boxes" : {
         "pattern": "data/%s/%s_boxes.txt",
-        "fields": ["dataset", "batchid"]
+        "fields": ["dataset", "batch"]
     },
     "scans" : {
         "pattern": "data/%s/scan_list.txt",

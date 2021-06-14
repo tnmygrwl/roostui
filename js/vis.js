@@ -10,7 +10,7 @@ var UI = (function() {
 	var days;					// BoolList of dates
 	var frames;					// BoolList of frames for current day
 
-	var scans;					// List of scans for selected "station"
+	var scans;					// List of scans for selected "batch"
 	var boxes;					// All boxes
 	var boxes_by_day;           // Boxes grouped by day
 	var tracks;					// All tracks
@@ -21,7 +21,13 @@ var UI = (function() {
 	var config;                 // UI config
 	var dataset_config;         // Dataset config info
 	
-	
+	var nav = {
+		"dataset" : "",
+		"batch": "",
+		"day": 0,
+		"frame": 0
+	};
+
 	var labels = ['non-roost',
 				  'swallow-roost',
 				  'duplicate',
@@ -263,9 +269,8 @@ var UI = (function() {
 			.text(d => d);
 		
 		datasets.on("change", change_dataset);
-		var arr = window.location.search.substring(0).split("&");
-
 		set_filters(default_filters);
+		render_dataset();
 	};
 
 
@@ -288,188 +293,189 @@ var UI = (function() {
 		window.location.replace(window.location.href.replace(window.location.search,''));
 		d3.json('data/config.json').then(UI.init);
 	}
+
+
+	/* -----------------------------------------
+	 * Page navigation and rendering
+	 * ---------------------------------------- */
+
+	/* -----------------------------------------
+	 * 1. Dataset
+	 * ---------------------------------------- */
 	
-		
-	function init_stations(station_list)
-	{
-		station_list = station_list.trim().split("\n");
-
-		// Populate "station" dropdown list
-		var stations = d3.select('#stations');		
-
-		var options = stations.selectAll("option")
-			.data(station_list)
-			.join("option")
-			.text(d => d);
-		
-		stations.on("change", change_station);
-	}
-
-	
-	function change_station() {
-
-		var arr = window.location.search.substring(1).split("&");
-		
-		let datasets = d3.select('#datasets').node();
-		
-		// Called when "station" is selected to fetch data
-		let stations = d3.select('#stations').node();
-		
-		stations.blur();
-
-		// If work needs saving, check if user wants to proceed
-		if (window.onbeforeunload) {
-			if (! window.confirm("Change stations? You made changes but did not export data.")) {
-				return; 
-			}
-		}
-
-		var station_year = stations.value; // actually a "station-year", e.g., KBUF2010
-		var batchid = stations.value;
-		
-		var data = {
-			"dataset" : datasets.value,
-			"batchid" : station_year
-		};
-		
-		var csv_file = expand_pattern(dataset_config["boxes"], data);
-		var scans_file = expand_pattern(dataset_config["scans"], data);
-		function load_scans(scan_list) {
-			
-			scan_list = scan_list.trim().split("\n");
-
-			// filter scan list to current batch if specified in dataset_config
-			if ("filter" in dataset_config["scans"])
-			{
-				scan_list = scan_list.filter( 
-					d => expand_pattern(dataset_config["scans"]["filter"], parse_scan(d)) == batchid
-				);
-			}
-
-			// group scans by day
-			scans = d3.group(scan_list, (d) => parse_scan(d)['date']);
-		}
-
-		// convert a row of the csv file into Box object
-		function row2box(d) {
-			let info = parse_scan(d.filename);
-			d.station = info['station'];
-			d.date = info['date'];
-			d.time = info['time'];
-			if("swap" in dataset_config && dataset_config["swap"]){
-				let tmp = d.y;
-				d.y = d.x;
-				d.x = tmp;
-			}		
-			return new Box(d);
-		}
-
-		// Load boxes and create tracks when new batch is selected
-		function load_boxes(_boxes) {		
-			boxes = _boxes;
-			boxes_by_day = d3.group(boxes, d => d.date);
-
-			let summarizer = function(v) { // v is the list of boxes for one track
-				let date = v[0].date;
-				let length = v.length;
-				let tot_score = d3.sum(v, d => d.det_score);
-				let avg_score = tot_score / length;
-				return new Track({
-					date: v[0].date,
-					length: v.length,
-					tot_score: tot_score,
-					avg_score: avg_score,
-					user_labeled: false,
-					viewed: false
-				});
-			};
-			
-			tracks = d3.rollup(boxes, summarizer, d => d.track_id);
-
-			// Link boxes to their tracks
-			for (var box of boxes) {
-				box.track = tracks.get(box.track_id);
-			}
-			update_tracks(); // add attributes that depend on user input
-			
-			// Plot detection scores
-			//plot_scores(boxes.map(d => d.det_score));
-		}
-		
-		// Load scans and boxes
-		Promise.all([
-			d3.text(scans_file).then(load_scans),
-			d3.csv(csv_file, row2box).then(load_boxes)
-		]).then( v => {populate_days(); enable_filtering(); } );
-	}
-
-	
-	function init_dataset(_config) {
-		dataset_config = _config;		
-		if ("filtering" in dataset_config) {
-			set_filters(dataset_config["filtering"]);
-		}
-		else {
-			set_filters(default_filters);
-		}
-	}
-
 	function change_dataset() {
-		
-		var arr = window.location.search.substring(0).split("&");
-		arr[0] = arr[0].replace("?","");
-		// Called when "station" is selected to fetch data
 		let datasets = d3.select('#datasets').node();
-		
 		datasets.blur();
-
+		nav['dataset'] = datasets.value;
+		render_dataset();
+	}
+	
+	function render_dataset() {
 		// If work needs saving, check if user wants to proceed
 		if (window.onbeforeunload) {
-			if (! window.confirm("Change datasets? You made changes but did not export data.")) {
+			if (! window.confirm("Change dataset? You made changes but did not export data.")) {
 				return; 
 			}
 		}
 		
-		var stationFile = sprintf("data/%s/batches.txt", datasets.value);		
-		var dataset_config_file = sprintf("data/%s/config.json", datasets.value);
+		let dataset = nav['dataset'];
+		if (dataset) {
 
-		Promise.all([
-			d3.text(stationFile).then(init_stations),
-			d3.json(dataset_config_file).then(init_dataset)
-		]).then( change_station );
+			d3.select('#datasets').node().value = dataset;
+
+			function handle_config(_config) {
+				dataset_config = _config;		
+				if ("filtering" in dataset_config) {
+					set_filters(dataset_config["filtering"]);
+				}
+				else {
+					set_filters(default_filters);
+				}
+			}
+
+			function handle_batches(batch_list)
+			{
+				batch_list = batch_list.trim().split("\n");			
+				var batches = d3.select('#batches');		
+				var options = batches.selectAll("option")
+					.data(batch_list)
+					.join("option")
+					.text(d => d);
+				batches.on("change", change_batch);
+			}
+			
+			var batchFile = sprintf("data/%s/batches.txt", dataset);		
+			var dataset_config_file = sprintf("data/%s/config.json", dataset);
+			
+			Promise.all([
+				d3.text(batchFile).then(handle_batches),
+				d3.json(dataset_config_file).then(handle_config)
+			]).then( change_batch );
+		}
 	}
 	
-	function populate_days() {
-		
-		var arr = window.location.search.substring(1).split("&");
-		days = new BoolList(scans.keys(), boxes_by_day.keys());
-		// example query http://localhost:8000/?KBUF1999&KBUF19990113_144744
-		
-		var dateSelect = d3.select("#dateSelect");
-		var options = dateSelect.selectAll("option")
-			.data(days.items);
 
-		options.enter()
-			.append("option")
-			.merge(options)
-			.attr("value", (d,i) => i)
-			.text(function(d, i) {
-				var str = parse_day(d);
-				return days.isTrue(i) ? str : "(" + str + ")";
-			});
+	/* -----------------------------------------
+	 * 2. Batch
+	 * ---------------------------------------- */
 
-		options.exit().remove();
-		
-		dateSelect.on("change", () => {
-			var n = dateSelect.node();
-			n.blur();
-			days.currentInd = n.value;
-			render_day();
-		});
-		
-		render_day();
+	function change_batch() {
+		let batches = d3.select('#batches').node();
+		batches.blur();
+		nav['batch'] = batches.value;
+		render_batch();
 	}
 
+	function render_batch() {
+
+		if (window.onbeforeunload) {
+			if (! window.confirm("Change batches? You made changes but did not export data.")) {
+				return; 
+			}
+		}
+
+		if (nav['batch']) {
+
+			d3.select('#batches').node().value = nav['batch'];
+			
+			var csv_file = expand_pattern(dataset_config["boxes"], nav);
+			var scans_file = expand_pattern(dataset_config["scans"], nav);
+			
+			function handle_scans(scan_list) {				
+				scan_list = scan_list.trim().split("\n");
+				
+				// filter scan list to current batch if specified in dataset_config
+				if ("filter" in dataset_config["scans"])
+				{
+					scan_list = scan_list.filter( 
+						d => expand_pattern(dataset_config["scans"]["filter"], parse_scan(d)) == nav['batch']
+					);
+				}
+
+				// group scans by day
+				scans = d3.group(scan_list, (d) => parse_scan(d)['date']);
+			}
+
+			// convert a row of the csv file into Box object
+			function row2box(d) {
+				let info = parse_scan(d.filename);
+				d.station = info['station'];
+				d.date = info['date'];
+				d.time = info['time'];
+				if("swap" in dataset_config && dataset_config["swap"]){
+					let tmp = d.y;
+					d.y = d.x;
+					d.x = tmp;
+				}		
+				return new Box(d);
+			}
+
+			// Load boxes and create tracks when new batch is selected
+			function handle_boxes(_boxes) {		
+				boxes = _boxes;
+				boxes_by_day = d3.group(boxes, d => d.date);
+
+				let summarizer = function(v) { // v is the list of boxes for one track
+					let date = v[0].date;
+					let length = v.length;
+					let tot_score = d3.sum(v, d => d.det_score);
+					let avg_score = tot_score / length;
+					return new Track({
+						date: v[0].date,
+						length: v.length,
+						tot_score: tot_score,
+						avg_score: avg_score,
+						user_labeled: false,
+						viewed: false
+					});
+				};
+				
+				tracks = d3.rollup(boxes, summarizer, d => d.track_id);
+
+				// Link boxes to their tracks
+				for (var box of boxes) {
+					box.track = tracks.get(box.track_id);
+				}
+				update_tracks(); // add attributes that depend on user input
+			}
+			
+			// Load scans and boxes
+			Promise.all([
+				d3.text(scans_file).then(handle_scans),
+				d3.csv(csv_file, row2box).then(handle_boxes)
+			]).then( () => {
+
+				enable_filtering();
+				
+				days = new BoolList(scans.keys(), boxes_by_day.keys());
+				
+				var dateSelect = d3.select("#dateSelect");
+				var options = dateSelect.selectAll("option")
+					.data(days.items);
+
+				options.enter()
+					.append("option")
+					.merge(options)
+					.attr("value", (d,i) => i)
+					.text(function(d, i) {
+						var str = parse_day(d);
+						return days.isTrue(i) ? str : "(" + str + ")";
+					});
+
+				options.exit().remove();
+				
+				dateSelect.on("change", () => {
+					var n = dateSelect.node();
+					n.blur();
+					days.currentInd = n.value;
+					render_day();
+				});
+
+				render_day();
+			});
+		}
+	}
+	
 	function handle_keydown(e) {
 		var tagName = d3.select(e.target).node().tagName;
 		if (tagName == 'INPUT' || tagName == 'SELECT' || tagName == 'TEXTAREA') {
@@ -722,7 +728,7 @@ var UI = (function() {
 		let dataStr = d3.csvFormat(boxes, cols);
 		let dataUri = 'data:text/csv;charset=utf-8,'+ encodeURIComponent(dataStr);
 		
-		let filename = sprintf("roost_labels_%s.csv", $("#stations").val());
+		let filename = sprintf("roost_labels_%s.csv", $("#batches").val());
 
 		let linkElement = document.createElement('a');
 		linkElement.setAttribute('href', dataUri);

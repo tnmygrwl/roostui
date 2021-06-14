@@ -1,5 +1,22 @@
 import sprintf from 'sprintf';
 
+export function obj2url(obj) {
+	var str = Object.keys(obj).map(function(key) {
+		return key + '=' + obj[key];
+	}).join('&');
+	return str;
+}
+
+export function url2obj(str) {
+	var result = str.split('&').reduce(
+		(res, item) => {
+			var parts = item.split('=');
+			res[parts[0]] = parts[1];
+			return res;
+		},
+		{});
+}
+
 export function parse_day(day) {
 	var y  = day.substr(0,4);
 	var m  = day.substr(4,2) - 1;
