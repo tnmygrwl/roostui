@@ -8,14 +8,16 @@ export function obj2url(obj) {
 }
 
 export function url2obj(str) {
-	var result = str.split('&').reduce(
-		(res, item) => {
-			var parts = item.split('=');
-			res[parts[0]] = parts[1];
-			return res;
-		},
-		{});
-	return result;
+	let params = str.split('&');
+	let obj = {};
+	for (let key_val of params) 
+	{
+		if (key_val) {
+			let [key, val] = key_val.split('=');
+			obj[key] = val;
+		}
+	}
+	return obj;
 }
 
 export function parse_day(day) {

@@ -143,17 +143,11 @@ var UI = (function() {
 				.attr("name", "label")
 				.attr("value", (d,i) => i);
 				
-			
 			entering.append("label")
 				.attr("for", (d,i) => "label" + i)
 				.text((d,i) => sprintf("(%d) %s", i+1, d));
-				
-			
-
 			
 			entering.append("br");
-			
-			
 
 			// Select the correct radio button
 			tip.selectAll("input")
@@ -251,11 +245,12 @@ var UI = (function() {
 	 * UI
 	 * ---------------------------------------- */
 
-	// Function on every page load
-	UI.init = function(data)
-	{
+	UI.handle_config = function(data) {
 		config = data;
-
+	};
+	
+	UI.init = function()
+	{
 		svgs = d3.selectAll("#svg1, #svg2");
 				
 		// Populate data and set event handlers	
@@ -276,7 +271,6 @@ var UI = (function() {
 
 		let url_nav = url2obj(window.location.hash.substring(1));
 		Object.assign(nav, url_nav);
-		
 		render_dataset();
 	};
 
@@ -728,11 +722,11 @@ var UI = (function() {
 		 	.attr("x", b => b.x - scale*b.r + 5)
 			.attr("y", b => b.y - scale*b.r - 5)
 		 	.text(b => b.track_id + ": " + b.det_score);		
-		
-		//var newUrl=(window.location.href.split("?")[0].concat("?").concat(datasets.value).concat("&").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
-		//history.replaceState({}, null, newUrl);
-		window.location.hash = obj2url(nav);
-		
+
+		var url = window.location.href.replace(window.location.hash,"");
+		history.replaceState({}, "", url + "#" + obj2url(nav));
+
+		//window.location.hash = obj2url(nav);
 	}	
 
 	
@@ -774,4 +768,4 @@ var UI = (function() {
 }());
 
 
-d3.json('data/config.json').then(UI.init);
+d3.json('data/config.json').then(UI.handle_config).then(UI.init);
