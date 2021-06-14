@@ -7,6 +7,12 @@ import { BoolList } from './BoolList.js';
 var UI = (function() {
 
 	var UI = {};
+
+
+	/* -----------------------------------------
+	 * UI state variables
+	 * ---------------------------------------- */
+	
 	var days;					// BoolList of dates
 	var frames;					// BoolList of frames for current day
 
@@ -40,6 +46,8 @@ var UI = (function() {
 		"score_min" : 0.05,
 		"avg_score_min" : -1.0
 	};
+
+	var filters = {};
 
 	var keymap = {
 		'38': prev_day, // up
@@ -267,8 +275,9 @@ var UI = (function() {
 			.text(d => d);
 		
 		datasets.on("change", change_dataset);
-		set_filters(default_filters);
-
+		Object.assign(filters, default_filters);
+		render_filters();
+		
 		let url_nav = url2obj(window.location.hash.substring(1));
 		Object.assign(nav, url_nav);
 		render_dataset();
@@ -314,9 +323,8 @@ var UI = (function() {
 		render_frame();
 	}
 
-	function set_filters(data) {
-		for (var key in default_filters) {
-			var val = key in data ? data[key] : default_filters[key];
+	function render_filters() {
+		for (const [key, val] of Object.entries(filters)) {
 			document.getElementById(key).value = val;
 		}
 	}
@@ -354,11 +362,12 @@ var UI = (function() {
 			function handle_config(_config) {
 				dataset_config = _config;		
 				if ("filtering" in dataset_config) {
-					set_filters(dataset_config["filtering"]);
+					Object.assign(filters, dataset_config["filtering"]);
 				}
 				else {
-					set_filters(default_filters);
+					Object.assign(filters, default_filters);
 				}
+				render_filters();
 			}
 
 			function handle_batches(batch_list)
