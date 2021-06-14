@@ -345,7 +345,8 @@ var UI = (function() {
 	function change_dataset() {
 		let datasets = d3.select('#datasets').node();
 		datasets.blur();
-		nav['dataset'] = datasets.value;
+		nav.dataset = datasets.value;
+		nav.day = 0;
 		render_dataset();
 	}
 	
@@ -357,7 +358,7 @@ var UI = (function() {
 			}
 		}
 		
-		let dataset = nav['dataset'];
+		let dataset = nav.dataset;
 		if (dataset) {
 
 			d3.select('#datasets').node().value = dataset;
@@ -401,7 +402,7 @@ var UI = (function() {
 	function change_batch() {
 		let batches = d3.select('#batches').node();
 		batches.blur();
-		nav['batch'] = batches.value;
+		nav.batch = batches.value;
 		render_batch();
 	}
 
@@ -413,9 +414,9 @@ var UI = (function() {
 			}
 		}
 
-		if (nav['batch']) {
+		if (nav.batch) {
 
-			d3.select('#batches').node().value = nav['batch'];
+			d3.select('#batches').node().value = nav.batch;
 			
 			var csv_file = expand_pattern(dataset_config["boxes"], nav);
 			var scans_file = expand_pattern(dataset_config["scans"], nav);
@@ -427,7 +428,7 @@ var UI = (function() {
 				if ("filter" in dataset_config["scans"])
 				{
 					scan_list = scan_list.filter( 
-						d => expand_pattern(dataset_config["scans"]["filter"], parse_scan(d)) == nav['batch']
+						d => expand_pattern(dataset_config["scans"]["filter"], parse_scan(d)) == nav.batch
 					);
 				}
 
@@ -556,7 +557,7 @@ var UI = (function() {
 	function change_day() {
 		let n = d3.select("#dateSelect").node();
 		n.blur();
-		nav['day'] = n.value;
+		nav.day = n.value;
 		render_day();
 	}
 	
@@ -577,8 +578,8 @@ var UI = (function() {
 	}
 
 	function update_nav_then_render_day() {
-		nav['day'] = days.currentInd;
-		nav['frame'] = 0;
+		nav.day = days.currentInd;
+		nav.frame = 0;
 		render_day();
 	}
 	
@@ -586,7 +587,7 @@ var UI = (function() {
 
 		if(!days) return;
 
-		days.currentInd = nav['day'];
+		days.currentInd = nav.day;
 		d3.select("#dateSelect").property("value", days.currentInd);
 				
 		var day_key = days.currentItem; // string representation of date
@@ -644,7 +645,7 @@ var UI = (function() {
 	}
 
 	function update_nav_then_render_frame() {
-		nav['frame'] = frames.currentInd;
+		nav.frame = frames.currentInd;
 		render_frame();
 	}
 
@@ -665,7 +666,7 @@ var UI = (function() {
 
 		var day = days.currentItem;		
 
-		frames.currentInd = nav['frame'];
+		frames.currentInd = nav.frame;
 		d3.select("#timeSelect").property("value", frames.currentInd);
 				
 		var scan = frames.currentItem;
