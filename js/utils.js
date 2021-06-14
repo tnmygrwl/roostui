@@ -15,6 +15,7 @@ export function url2obj(str) {
 			return res;
 		},
 		{});
+	return result;
 }
 
 export function parse_day(day) {

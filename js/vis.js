@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import sprintf from 'sprintf';
 import $ from 'jquery'; 
-import { parse_day, parse_time, parse_scan, get_urls, expand_pattern } from './utils.js';
+import { parse_day, parse_time, parse_scan, get_urls, expand_pattern, obj2url, url2obj } from './utils.js';
 import { BoolList } from './BoolList.js';
 
 var UI = (function() {
@@ -247,6 +247,10 @@ var UI = (function() {
 	Track.selectedTrack = null;
 	Track.unselectTimeout = null;
 
+	/* -----------------------------------------
+	 * UI
+	 * ---------------------------------------- */
+
 	// Function on every page load
 	UI.init = function(data)
 	{
@@ -270,15 +274,30 @@ var UI = (function() {
 		
 		datasets.on("change", change_dataset);
 		set_filters(default_filters);
+
+		let url_nav = url2obj(window.location.hash.substring(1));
+		Object.assign(nav, url_nav);
+		
 		render_dataset();
 	};
 
 
-	function set_filters(data) {
-		for (var key in default_filters) {
-			var val = key in data ? data[key] : default_filters[key];
-			document.getElementById(key).value = val;
+	function handle_keydown(e) {
+		var tagName = d3.select(e.target).node().tagName;
+		if (tagName == 'INPUT' || tagName == 'SELECT' || tagName == 'TEXTAREA') {
+			return;
 		}
+		var code = e.keyCode;
+		var map = e.shiftKey ? shift_keymap : keymap;
+		if (code in map) {
+			e.preventDefault();
+			e.stopPropagation();
+			map[code]();
+		}
+	}
+
+	function unique(a) {
+		return [...new Set(a)];
 	}
 	
 	function save_notes(box)
@@ -287,14 +306,34 @@ var UI = (function() {
 		box.user_labeled = true;
 	}
 	
-
 	function reset_url()
 	{
 		window.location.replace(window.location.href.replace(window.location.search,''));
 		d3.json('data/config.json').then(UI.init);
 	}
 
+	/* -----------------------------------------
+	 * Filtering
+	 * ---------------------------------------- */
 
+	function enable_filtering() {
+		d3.selectAll("#detections_min, #high_quality_detections_min, #score_min, #avg_score_min")
+			.on("change", change_filter);
+	}
+
+	function change_filter(d, i, nodes) {
+		update_tracks();
+		render_frame();
+	}
+
+	function set_filters(data) {
+		for (var key in default_filters) {
+			var val = key in data ? data[key] : default_filters[key];
+			document.getElementById(key).value = val;
+		}
+	}
+
+	
 	/* -----------------------------------------
 	 * Page navigation and rendering
 	 * ---------------------------------------- */
@@ -464,82 +503,11 @@ var UI = (function() {
 
 				options.exit().remove();
 				
-				dateSelect.on("change", () => {
-					var n = dateSelect.node();
-					n.blur();
-					days.currentInd = n.value;
-					render_day();
-				});
+				dateSelect.on("change", change_day);
 
 				render_day();
 			});
 		}
-	}
-	
-	function handle_keydown(e) {
-		var tagName = d3.select(e.target).node().tagName;
-		if (tagName == 'INPUT' || tagName == 'SELECT' || tagName == 'TEXTAREA') {
-			return;
-		}
-		var code = e.keyCode;
-		var map = e.shiftKey ? shift_keymap : keymap;
-		if (code in map) {
-			e.preventDefault();
-			e.stopPropagation();
-			map[code]();
-		}
-	}
-
-	function enable_filtering() {
-		d3.selectAll("#detections_min, #high_quality_detections_min, #score_min, #avg_score_min")
-			.on("change", change_filter);
-	}
-
-	function change_filter(d, i, nodes) {
-		// nodes[i].blur();
-		update_tracks();
-		render_frame();
-	}
-
-	function render_day() {
-
-		if(!days) return;
-		
-		d3.select("#dateSelect").property("value", days.currentInd);
-		var arr = window.location.search.substring(1).split("&");
-				
-		// Populate the dropdown
-		var day = days.currentItem; // string representation of date
-		
-		var allframes = scans.get(day); // list of scans
-		var frames_with_roosts = [];
-		if (boxes_by_day.has(day)) {
-			frames_with_roosts =  boxes_by_day.get(day).map(d => d.filename);
-		}
-
-		frames = new BoolList(allframes, frames_with_roosts);
-
-		var timeSelect = d3.select("#timeSelect");
-		
-		var options = timeSelect.selectAll("option")
-			.data(frames.items);
-
-		options.enter()
-			.append("option")
-			.merge(options)
-			.attr("value", (d,i) => i)
-			.text(d => parse_time(parse_scan(d)['time']));
-
-		options.exit().remove();
-		
-		timeSelect.on("change", () => {
-			var n = timeSelect.node();
-			n.blur();
-			frames.currentInd = n.value;
-			render_frame();
-		});
-		
-		render_frame();
 	}
 
 	// Compute track attributes that depend on user input
@@ -580,10 +548,113 @@ var UI = (function() {
 		}
 	}
 
-	function unique(a) {
-		return [...new Set(a)];
+	
+	/* -----------------------------------------
+	 * 3. Day
+	 * ---------------------------------------- */
+
+	function change_day() {
+		let n = d3.select("#dateSelect").node();
+		n.blur();
+		nav['day'] = n.value;
+		render_day();
 	}
 	
+	function prev_day() {
+		if (days.prev()) update_nav_then_render_day();
+	}
+
+	function prev_day_with_roost() {
+		if (days.prevTrue()) update_nav_then_render_day();
+	}
+
+	function next_day() {
+		if (days.next()) update_nav_then_render_day();
+	}
+
+	function next_day_with_roost() {
+		if (days.nextTrue()) update_nav_then_render_day();
+	}
+
+	function update_nav_then_render_day() {
+		nav['day'] = days.currentInd;
+		nav['frame'] = 0;
+		render_day();
+	}
+	
+	function render_day() {
+
+		if(!days) return;
+
+		days.currentInd = nav['day'];
+		d3.select("#dateSelect").property("value", days.currentInd);
+				
+		var day_key = days.currentItem; // string representation of date
+		
+		var allframes = scans.get(day_key); // list of scans
+		var frames_with_roosts = [];
+		if (boxes_by_day.has(day_key)) {
+			frames_with_roosts =  boxes_by_day.get(day_key).map(d => d.filename);
+		}
+
+		frames = new BoolList(allframes, frames_with_roosts);
+
+		var timeSelect = d3.select("#timeSelect");
+		
+		var options = timeSelect.selectAll("option")
+			.data(frames.items);
+
+		options.enter()
+			.append("option")
+			.merge(options)
+			.attr("value", (d,i) => i)
+			.text(d => parse_time(parse_scan(d)['time']));
+
+		options.exit().remove();
+		
+		timeSelect.on("change", () => {
+			var n = timeSelect.node();
+			n.blur();
+			frames.currentInd = n.value;
+			render_frame();
+		});
+		
+		render_frame();
+	}
+
+	
+	/* -----------------------------------------
+	 * 4. Frame
+	 * ---------------------------------------- */
+
+	function prev_frame() {
+		if (frames.prev()) update_nav_then_render_frame();
+	}
+
+	function next_frame() {
+		if (frames.next()) update_nav_then_render_frame();
+	}
+
+	function prev_frame_with_roost() {
+		if (frames.prevTrue()) update_nav_then_render_frame();
+	}
+
+	function next_frame_with_roost() {
+		if (frames.nextTrue()) update_nav_then_render_frame();
+	}
+
+	function update_nav_then_render_frame() {
+		nav['frame'] = frames.currentInd;
+		render_frame();
+	}
+
+	function mapper(box) {
+		var ll = box.lat + "," + box.lon;
+		var url = "http://maps.google.com/?q=" + ll + "&ll=" + ll + "&z=8";
+		//var url = "http://www.google.com/maps/search/?api=1&query=" + ll + "&zoom=8&basemap=satellite";
+		window.open(url);
+	}
+
 	function render_frame()
 	{
 		if(!days) return;
@@ -593,13 +664,12 @@ var UI = (function() {
 		}
 
 		var day = days.currentItem;		
-		
+
+		frames.currentInd = nav['frame'];
 		d3.select("#timeSelect").property("value", frames.currentInd);
 				
 		var scan = frames.currentItem;
 		
-		// $("#from_sunrise").text(s.boxes[i].from_sunrise);		
-
 		var urls = get_urls(scan, dataset_config);
 		d3.select("#img1").attr("src", urls[0]);
 		d3.select("#img2").attr("src", urls[1]);
@@ -664,50 +734,16 @@ var UI = (function() {
 			.attr("y", b => b.y - scale*b.r - 5)
 		 	.text(b => b.track_id + ": " + b.det_score);		
 		
-		var newUrl=(window.location.href.split("?")[0].concat("?").concat(datasets.value).concat("&").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
-		
-		history.replaceState({}, null, newUrl);
+		//var newUrl=(window.location.href.split("?")[0].concat("?").concat(datasets.value).concat("&").concat(frames.currentItem.substr(0,8)).concat("&").concat(frames.currentItem));
+		//history.replaceState({}, null, newUrl);
+		window.location.hash = obj2url(nav);
 		
 	}	
 
-	function mapper(box) {
-		var ll = box.lat + "," + box.lon;
-		var url = "http://maps.google.com/?q=" + ll + "&ll=" + ll + "&z=8";
-		//var url = "http://www.google.com/maps/search/?api=1&query=" + ll + "&zoom=8&basemap=satellite";
-		window.open(url);
-	}
-
-	function prev_frame() {
-		if (frames.prev()) render_frame();
-	}
-
-	function next_frame() {
-		if (frames.next()) render_frame();
-	}
-
-	function prev_frame_with_roost() {
-		if (frames.prevTrue()) render_frame();
-	}
-
-	function next_frame_with_roost() {
-		if (frames.nextTrue()) render_frame();
-	}
-
-	function prev_day() {
-		if (days.prev()) render_day();
-	}
-
-	function prev_day_with_roost() {
-		if (days.prevTrue()) render_day();
-	}
-
-	function next_day() {
-		if (days.next()) render_day();
-	}
-
-	function next_day_with_roost() {
-		if (days.nextTrue()) render_day();
-	}
+	
+	/* -----------------------------------------
+	 * 5. Export
+	 * ---------------------------------------- */
 	
 	function export_sequences() {
 
