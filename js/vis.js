@@ -579,7 +579,7 @@ var UI = (function() {
 		let n = d3.select("#dateSelect").node();
 		n.blur();
 		nav.day = n.value;
-		render_day();
+		update_nav_then_render_day();
 	}
 	
 	function prev_day() {
@@ -638,7 +638,7 @@ var UI = (function() {
 			var n = timeSelect.node();
 			n.blur();
 			frames.currentInd = n.value;
-			render_frame();
+			update_nav_then_render_frame();
 		});
 		
 		render_frame();
