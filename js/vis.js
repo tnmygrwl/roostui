@@ -358,12 +358,13 @@ var UI = (function() {
 	
 	function render_dataset() {
 		// If work needs saving, check if user wants to proceed
-		if (window.onbeforeunload) {
-			if (! window.confirm("Change dataset? You made changes but did not export data.")) {
+		if (window.onbeforeunload &&
+			! window.confirm("Change dataset? You made changes but did not export data."))
+		{
 				return; 
-			}
 		}
-		
+		window.onbeforeunload = null;
+
 		let dataset = nav.dataset;
 		if (dataset) {
 
@@ -425,11 +426,12 @@ var UI = (function() {
 
 	function render_batch() {
 
-		if (window.onbeforeunload) {
-			if (! window.confirm("Change batches? You made changes but did not export data.")) {
-				return; 
-			}
+		if (window.onbeforeunload &&
+			! window.confirm("Change batches? You made changes but did not export data."))
+		{
+			return; 
 		}
+		window.onbeforeunload = null;
 
 		if (nav.batch) {
 
