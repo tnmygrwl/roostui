@@ -53,12 +53,13 @@ export function parse_scan(scan) {
 			'day': parseInt(day)};
 }
 
-export function get_urls(scan, config) {
+export function get_urls(scan, dataset_name, config) {
 
-	var scan_fields = parse_scan(scan);
-
-	var dz = expand_pattern(config["dz"], scan_fields);
-	var vr = expand_pattern(config["vr"], scan_fields);
+	var fields = parse_scan(scan);
+	fields["dataset"] = dataset_name;
+	
+	var dz = expand_pattern(config["dz"], fields);
+	var vr = expand_pattern(config["vr"], fields);
 	
 	return [dz, vr];
 }

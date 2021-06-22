@@ -25,14 +25,21 @@ var UI = (function() {
 	var svgs;					// Top-level svg elements
 
 	var config;                 // UI config
-	var dataset_config;         // Dataset config info
+	var dataset_config;         // Dataset config
 	
-	var nav = {
+	var nav = {					// Navigation state
 		"dataset" : "",
 		"batch": "",
 		"day": 0,
 		"frame": 0
 	};
+
+	var filters = {};			// Current filters
+
+	
+	/* -----------------------------------------
+	 * UI globals
+	 * ---------------------------------------- */
 
 	var labels = ['non-roost',
 				  'swallow-roost',
@@ -46,9 +53,7 @@ var UI = (function() {
 		"score_min" : 0.05,
 		"avg_score_min" : -1.0
 	};
-
-	var filters = {};
-
+	
 	var keymap = {
 		'38': prev_day, // up
 		'40': next_day, // down
@@ -63,9 +68,9 @@ var UI = (function() {
 		'39': next_frame_with_roost   // right
 	};
 
-	/* -----------------------------------------
+	/* ---------------------------------------------------
 	 * Class definitions
-	 * ---------------------------------------- */
+	 * -------------------------------------------------- */
 
 	/* -----------------------------------------
 	 * Box
@@ -360,7 +365,7 @@ var UI = (function() {
 			d3.select('#datasets').node().value = dataset;
 
 			function handle_config(_config) {
-				dataset_config = _config;		
+				dataset_config = _config;
 				if ("filtering" in dataset_config) {
 					Object.assign(filters, dataset_config["filtering"]);
 				}
@@ -387,7 +392,7 @@ var UI = (function() {
 			Promise.all([
 				d3.text(batchFile).then(handle_batches),
 				d3.json(dataset_config_file).then(handle_config)
-			]).then( change_batch );
+			]).then( render_batch );
 		}
 	}
 	
@@ -463,7 +468,8 @@ var UI = (function() {
 						tot_score: tot_score,
 						avg_score: avg_score,
 						user_labeled: false,
-						viewed: false
+						viewed: false,
+						boxes: v
 					});
 				};
 				
@@ -668,7 +674,7 @@ var UI = (function() {
 				
 		var scan = frames.currentItem;
 		
-		var urls = get_urls(scan, dataset_config);
+		var urls = get_urls(scan, nav["dataset"], dataset_config);
 		d3.select("#img1").attr("src", urls[0]);
 		d3.select("#img2").attr("src", urls[1]);
 

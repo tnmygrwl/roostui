@@ -1,3 +1,8 @@
 {
-    "datasets" : ["train", "greatlakes-2019", "greatlakes_test"]
+    "datasets" : ["train",
+                  "greatlakes-2019",
+                  "greatlakes_test",
+                  "greatlakes_test_c4_det005",
+                  "greatlakes_test_c4",
+                  "greatlakes_test_c4_det01"]
 }
