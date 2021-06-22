@@ -17,8 +17,8 @@
     },
     "filtering" : {
         "detections_min" : 2,
-        "high_quality_detections_min": 2,
-        "score_min" : 0.05,
-        "avg_score_min" : -1
+        "high_quality_detections_min": 1,
+        "score_min" : 0.5,
+        "avg_score_min" : 0.15
     }
 }
