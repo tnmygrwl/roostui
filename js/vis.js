@@ -344,11 +344,16 @@ var UI = (function() {
 	 * ---------------------------------------- */
 	
 	function change_dataset() {
+
 		let datasets = d3.select('#datasets').node();
 		datasets.blur();
+		
 		nav.dataset = datasets.value;
+		nav.batch = '';
 		nav.day = 0;
-		render_dataset();
+		nav.frame = 0;
+
+		render_dataset();		
 	}
 	
 	function render_dataset() {
@@ -384,6 +389,12 @@ var UI = (function() {
 					.join("option")
 					.text(d => d);
 				batches.on("change", change_batch);
+
+				// If the batch nav is not set already, used the selected value
+				// from the dropdown list
+				if (! nav.batch) {
+					nav.batch = batches.node().value;
+				}
 			}
 			
 			var batchFile = sprintf("data/%s/batches.txt", dataset);		
@@ -404,7 +415,11 @@ var UI = (function() {
 	function change_batch() {
 		let batches = d3.select('#batches').node();
 		batches.blur();
+		
 		nav.batch = batches.value;
+		nav.day = 0;
+		nav.frame = 0;
+		
 		render_batch();
 	}
 
@@ -448,7 +463,8 @@ var UI = (function() {
 					let tmp = d.y;
 					d.y = d.x;
 					d.x = tmp;
-				}		
+				}
+				d.track_id = d.date + '-' + d.track_id;
 				return new Box(d);
 			}
 
