@@ -34,11 +34,11 @@
 
     ~~~ json
     {
-        "datasets" : ["train", "greatlakes-2019", "greatlakes_test", "<dataset_name">]
+        "datasets" : ["train", "greatlakes-2019", "greatlakes_test", "<dataset_name>"]
     }
     ~~~
 
-5. Test the website locally. See [README in parent directory](../README.md). Usually this means running `yarn run serve` and then navigating to [](http://localhost:8888).
+5. Test the website locally. See [README in parent directory](../README.md). Usually this means running `yarn run serve` and then navigating to [http://localhost:8888]().
 
 6. Commit and push your changes, and push the website to dopper with the script `publish.sh` in the root directory of the repo.
 
