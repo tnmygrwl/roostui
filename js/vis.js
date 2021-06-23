@@ -579,6 +579,7 @@ var UI = (function() {
 		let n = d3.select("#dateSelect").node();
 		n.blur();
 		nav.day = n.value;
+		days.currentInd = n.value;
 		update_nav_then_render_day();
 	}
 	
