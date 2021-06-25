@@ -181,10 +181,14 @@ var UI = (function() {
 			var link = tip.select("#mapper")
 				.html('<a href="#"> View on map</a>')
 				.on("click", () => mapper(box));
-			//console.log(box);
-			
-			var entering = tip.select("#notes").html('<input type="text" id="notestext" value="'+box.notes+'"> </input></br><input type="button" value="Save Notes" id="notes-save"></input>')
-			.on("click", () => save_notes(box));
+
+			// Create notes box
+			var notes = tip.select("#notes");
+			notes.node().value = box.track.notes;
+			notes.on("change", () => save_notes(box));
+			notes.on("keydown", (e) => {
+				if (e.which == 13) notes.node().blur();
+			});
 		}
 
 		// Called when user unhovers to schedule unselection in 250ms
@@ -225,17 +229,8 @@ var UI = (function() {
 		}
 
 		setLabel(label_id, label) {
-			var label_id_n;
-			if(!Number.isInteger(label_id)){
-				label_id_n = labels.indexOf(label_id);
-			}
-			else{label_id_n = labels.indexOf(label);}
-			d3.select("#label"+label_id_n).node().checked = true;	
-			if(!Number.isInteger(label_id)){
-				this.label = label_id;
-			}
-			else{this.label = labels[label_id];}
-			
+			d3.select("#label" + label_id).node().checked = true;
+			this.label = label;
 			this.user_labeled = true;
 			
 			for (const node of this.nodes.values()) {
@@ -309,7 +304,7 @@ var UI = (function() {
 	
 	function save_notes(box)
 	{
-		box.notes = document.getElementById('notestext').value;
+		box.track.notes = document.getElementById('notes').value;
 		box.user_labeled = true;
 	}
 	
@@ -487,6 +482,7 @@ var UI = (function() {
 						avg_score: avg_score,
 						user_labeled: false,
 						viewed: false,
+						notes: "",
 						boxes: v
 					});
 				};
@@ -567,6 +563,8 @@ var UI = (function() {
 			{
 				t.label = 'swallow-roost';
 			}
+
+			t.original_label = t.label;
 		}
 	}
 
@@ -723,14 +721,6 @@ var UI = (function() {
 		entering.each( function(d) {
 			d.track.setNode(this, this.parentNode);
 			d.track.viewed = true;
-			d.track.originallabel = d.track.label;
-			if(typeof d.notes !== 'undefined'){
-				d.track.originalnotes = d.notes;
-			}
-			else{
-				d.notes = "";
-				d.track.originalnotes = "";
-			}
 		});
 		
 		// Merge existing groups with entering ones
@@ -771,7 +761,7 @@ var UI = (function() {
 	function export_sequences() {
 
 		let box_cols = Object.keys(boxes[0]);
-		let track_cols = ["length", "tot_score", "avg_score", "viewed", "user_labeled", "label","originallabel","originalnotes"];
+		let track_cols = ["length", "tot_score", "avg_score", "viewed", "user_labeled", "label", "original_label", "notes"];
 
 		let exclude_cols = [...track_cols, "track"];
 		box_cols = box_cols.filter( val => exclude_cols.indexOf(val) === -1);
