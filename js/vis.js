@@ -770,8 +770,11 @@ var UI = (function() {
 	
 	function export_sequences() {
 
-		let box_cols = Object.keys(boxes[0]).filter( val => val !== "track");
+		let box_cols = Object.keys(boxes[0]);
 		let track_cols = ["length", "tot_score", "avg_score", "viewed", "user_labeled", "label","originallabel","originalnotes"];
+
+		let exclude_cols = [...track_cols, "track"];
+		box_cols = box_cols.filter( val => exclude_cols.indexOf(val) === -1);
 		
 									 
 		// Assign desired track cols to box
