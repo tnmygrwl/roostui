@@ -165,14 +165,14 @@ var UI = (function() {
 			// Select the correct radio button
 			tip.selectAll("input")
 				.property("checked", (d, i) => d===this.label)
-				.on("change", (d,i) => this.setLabel(i, d));
+				.on("change", (e, d) => this.setLabel(d));
 
 			
 			// Enable keyboard shortcuts
 			var zero_code = 48; // keycode for 0
 			for(let i=0; i < labels.length; i++) {
 				keymap[zero_code + parseInt(i+1)] =
-					((i,label) => () => this.setLabel(i, label))(i, labels[i]);
+					((label) => () => this.setLabel(label))(labels[i]);
 			}
 			keymap[9] = this.sendToBack; // tab: send to back
 
@@ -228,8 +228,9 @@ var UI = (function() {
 
 		}
 
-		setLabel(label_id, label) {
-			d3.select("#label" + label_id).node().checked = true;
+		setLabel(label) {
+			let i = labels.indexOf(label);
+			d3.select("#label" + i).node().checked = true;
 			this.label = label;
 			this.user_labeled = true;
 			
@@ -747,7 +748,7 @@ var UI = (function() {
 			.attr("y", b => b.y - scale*b.r - 5)
 		 	.text(b => b.track_id + ": " + b.det_score);		
 
-		groups.on("click", (e,d) => d.track.setLabel(0, "non-roost"));
+		groups.on("click", (e,d) => d.track.setLabel("non-roost"));
 		
 		var url = window.location.href.replace(window.location.hash,"");
 		history.replaceState({}, "", url + "#" + obj2url(nav));
