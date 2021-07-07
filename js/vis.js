@@ -8,7 +8,6 @@ var UI = (function() {
 
 	var UI = {};
 
-
 	/* -----------------------------------------
 	 * UI state variables
 	 * ---------------------------------------- */
@@ -22,6 +21,10 @@ var UI = (function() {
 	var tracks;					// All tracks
 	var tracks_by_day;          // Tracks grouped by day
 
+	var active_tracks;			// boxes active in current frame
+
+	var day_notes;              // map from day to notes for that day
+		
 	var svgs;					// Top-level svg elements
 
 	var config;                 // UI config
@@ -55,6 +58,8 @@ var UI = (function() {
 	};
 	
 	var keymap = {
+		'9':  next_box, // tab
+		'27': unselect_box, // esc
 		'38': prev_day, // up
 		'40': next_day, // down
 		'37': prev_frame,	// left
@@ -62,6 +67,7 @@ var UI = (function() {
 	};
 
 	var shift_keymap = {
+		'9':  prev_box, // tab
 		'38': prev_day_with_roost, // up
 		'40': next_day_with_roost, // down
 		'37': prev_frame_with_roost,	// left
@@ -174,7 +180,7 @@ var UI = (function() {
 				keymap[zero_code + parseInt(i+1)] =
 					((label) => () => this.setLabel(label))(labels[i]);
 			}
-			keymap[9] = this.sendToBack; // tab: send to back
+			//keymap[9] = this.sendToBack; // tab: send to back
 
 			// Create mapper link
 			var box = d3.select(node).datum(); // the Box object
@@ -477,6 +483,7 @@ var UI = (function() {
 					let tot_score = d3.sum(v, d => d.det_score);
 					let avg_score = tot_score / length;
 					return new Track({
+						id: v[0].track_id,
 						date: v[0].date,
 						length: v.length,
 						tot_score: tot_score,
@@ -506,6 +513,12 @@ var UI = (function() {
 				enable_filtering();
 				
 				days = new BoolList(scans.keys(), boxes_by_day.keys());
+
+				// Initialize notes
+				day_notes = new Map();
+				for (let day of days.items) {
+					day_notes.set(day, '');
+				}
 				
 				var dateSelect = d3.select("#dateSelect");
 				var options = dateSelect.selectAll("option")
@@ -610,9 +623,18 @@ var UI = (function() {
 
 		days.currentInd = nav.day;
 		d3.select("#dateSelect").property("value", days.currentInd);
-				
-		var day_key = days.currentItem; // string representation of date
 		
+		var day_key = days.currentItem; // string representation of date
+
+		// Populate day notes set up handlers
+		var notes = d3.select("#dayNotes");
+		notes.node().value = day_notes.get(day_key);
+		notes.on("change", () => save_day_notes());
+		notes.on("keydown", (e) => {
+			if (e.which == 13) notes.node().blur();
+		});
+
+		// 
 		var allframes = scans.get(day_key); // list of scans
 		var frames_with_roosts = [];
 		if (boxes_by_day.has(day_key)) {
@@ -642,6 +664,12 @@ var UI = (function() {
 		});
 		
 		render_frame();
+	}
+
+	function save_day_notes() {
+		let key = days.currentItem; // string representation of date
+		let value = d3.select("#dayNotes").node().value;
+		day_notes.set(key, value);
 	}
 
 	
@@ -698,9 +726,11 @@ var UI = (function() {
 
 		let boxes_for_day = boxes_by_day.has(day) ? boxes_by_day.get(day) : [];
 		let boxes_for_scan = boxes_for_day.filter(d => d.filename.trim() == scan.trim());
-		var track_ids = boxes_for_day.map((d) => d.track_id);
+		active_tracks = boxes_for_scan.map(b => tracks.get(b.track_id));
+		
+		let track_ids = boxes_for_day.map((d) => d.track_id);
 		track_ids = unique(track_ids);
-
+		
 		// Create color map from track_ids to ordinal color scale
 		var myColor = d3.scaleOrdinal().domain(track_ids)
 			.range(d3.schemeSet1);
@@ -756,6 +786,62 @@ var UI = (function() {
 		//window.location.hash = obj2url(nav);
 	}	
 
+
+	function prev_box() {
+
+		if (active_tracks.length == 0)
+			return;
+
+		let track_idx;
+
+		// If a track is currently selected, go to previous index, else go to last track
+		if (Track.selectedTrack) {
+			track_idx = active_tracks.indexOf(Track.selectedTrack);
+			Track.selectedTrack.unselect();
+			track_idx--;
+		}
+		else {
+			track_idx = active_tracks.length - 1;
+		}
+
+		// Select the track
+		if (track_idx >= 0) {
+			let track = active_tracks[track_idx];
+			let node = track.nodes.values().next().value;
+			track.select(node);
+		}
+	}
+
+	function next_box() {
+
+		if (active_tracks.length == 0)
+			return;
+
+		let track_idx;
+
+		// If a track is currently selected, go to next index, else go to first track
+		if (Track.selectedTrack) {
+			track_idx = active_tracks.indexOf(Track.selectedTrack);
+			Track.selectedTrack.unselect();
+			track_idx++;
+		}
+		else {
+			track_idx = 0;
+		}
+
+		// Select the track
+		if (track_idx < active_tracks.length) {
+			let track = active_tracks[track_idx];
+			let node = track.nodes.values().next().value;
+			track.select(node);
+		}
+	}
+	
+	function unselect_box() {
+		if (Track.selectedTrack)
+			Track.selectedTrack.unselect();
+	}
+
 	
 	/* -----------------------------------------
 	 * 5. Export
@@ -763,22 +849,30 @@ var UI = (function() {
 	
 	function export_sequences() {
 
-		let box_cols = Object.keys(boxes[0]);
+		// Determine column names associated with different entities (box, track, day)
 		let track_cols = ["length", "tot_score", "avg_score", "viewed", "user_labeled", "label", "original_label", "notes"];
+		let day_cols = ["day_notes"];
 
-		let exclude_cols = [...track_cols, "track"];
-		box_cols = box_cols.filter( val => exclude_cols.indexOf(val) === -1);
-		
+		// Columns associated with boxes are all other columns
+		let box_cols = Object.keys(boxes[0]);
+		let exclude_cols = [...track_cols, ...day_cols, "track"];
+		box_cols = box_cols.filter( val => exclude_cols.indexOf(val) === -1);		
 									 
-		// Assign desired track cols to box
-		for (var box of boxes) {
+		// Assign track attributes to each box
+		for (let box of boxes) {
 			var track = tracks.get(box.track_id);
 			for (var col of track_cols) {
 				box[col] = track[col];
 			}
 		}
 
-		let cols = box_cols.concat(track_cols);
+		// Assign day notes to box
+		for (let box of boxes) {
+			box['day_notes'] = day_notes.get(box['date']);
+		}
+
+		// This is the list of output columns
+		let cols = box_cols.concat(track_cols).concat(day_cols);
 		
 		let dataStr = d3.csvFormat(boxes, cols);
 		let dataUri = 'data:text/csv;charset=utf-8,'+ encodeURIComponent(dataStr);
