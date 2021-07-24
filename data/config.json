@@ -1,5 +1,6 @@
 {
     "datasets" : ["train",
                   "greatlakes-2019",
-                  "all_stations_v1"]
+                  "all_stations_v1",
+                  "bat"]
 }
