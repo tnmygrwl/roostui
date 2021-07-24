@@ -57,6 +57,10 @@
         padding-left: 15px;
     }
 
+    #instructions {
+        width: 260px;
+    }
+    
     #plot {
         width:400px;
         height:100px;
@@ -134,7 +138,7 @@
       <ul>
         <li>up/down for days</li>
         <li>left/right for frames</li>
-        <li>click bounding box for map</li>
+        <li>hover on box or use tab/shift-tab to select for labeling</li>
       </ul>
       <input id="export" type="button" value="Export"></input><strong>(REQUIRED TO SAVE)</strong>
     </div>
@@ -149,9 +153,11 @@
       <select id="dateSelect"></select> <br/>
       <label for="timeSelect">Time:</label>
       <select id="timeSelect"> </select> <br/>
+      <label for="dayNotes">Notes for day:</label>
+      <input id="dayNotes"> </input> <br/>
 	  
     </div>
-		
+    
 		 
     </div>
     <div id="filtering">
