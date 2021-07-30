@@ -53,10 +53,30 @@ export function parse_scan(scan) {
 			'day': parseInt(day)};
 }
 
-export function get_urls(scan, dataset_name, config) {
+export function parse_local_time(local_time) {
+	var datestr = local_time.substr(0, 8);
+	var timestr = local_time.substr(9, 6);
+	var year = datestr.substr(0, 4);
+	var month = datestr.substr(4, 2);
+	var day = datestr.substr(6, 2);
+	return {'date': datestr,
+			'time': timestr,
+			'year': parseInt(year),
+			'month': parseInt(month),
+			'day': parseInt(day)};
+}
+
+export function get_urls(scan, local_time, dataset_name, config) {
 
 	var fields = parse_scan(scan);
+	var local_time_fields = parse_local_time(local_time);
 	fields["dataset"] = dataset_name;
+
+	if ("local_year" in config["dz"]["fields"]) {
+		for (var i in local_time_fields) {
+			fields[i] = local_time_fields[i];
+		}
+	}
 	
 	var dz = expand_pattern(config["dz"], fields);
 	var vr = expand_pattern(config["vr"], fields);
