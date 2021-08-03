@@ -1,7 +1,8 @@
 import * as d3 from 'd3';
 import sprintf from 'sprintf';
 import $ from 'jquery'; 
-import { parse_day, parse_time, parse_scan, get_urls, expand_pattern, obj2url, url2obj } from './utils.js';
+import { parse_day, parse_time, parse_scan, parse_datetime,
+		 get_urls, expand_pattern, obj2url, url2obj } from './utils.js';
 import { BoolList } from './BoolList.js';
 
 var UI = (function() {
@@ -19,7 +20,6 @@ var UI = (function() {
 	var boxes;					// All boxes
 	var boxes_by_day;           // Boxes grouped by day
 	var tracks;					// All tracks
-	var tracks_by_day;          // Tracks grouped by day
 
 	var active_tracks;			// boxes active in current frame
 
@@ -441,20 +441,24 @@ var UI = (function() {
 			
 			var csv_file = expand_pattern(dataset_config["boxes"], nav);
 			var scans_file = expand_pattern(dataset_config["scans"], nav);
+
+			function preprocess_scan(d) {
+				d.local_date = parse_datetime(d.local_time)['date'];
+				return d;
+			}
 			
-			function handle_scans(scan_list) {				
-				scan_list = scan_list.trim().split("\n");
-				
+			function handle_scans(_scans) {
+				scans = _scans;
 				// filter scan list to current batch if specified in dataset_config
 				if ("filter" in dataset_config["scans"])
 				{
-					scan_list = scan_list.filter( 
-						d => expand_pattern(dataset_config["scans"]["filter"], parse_scan(d)) == nav.batch
+					scans = scans.filter( 
+						d => expand_pattern(dataset_config["scans"]["filter"], parse_scan(d.filename)) == nav.batch
 					);
 				}
 
 				// group scans by day
-				scans = d3.group(scan_list, (d) => parse_scan(d)['date']);
+				scans = d3.group(scans, (d) => d.local_date);
 			}
 
 			// convert a row of the csv file into Box object
@@ -469,13 +473,14 @@ var UI = (function() {
 					d.x = tmp;
 				}
 				d.track_id = d.date + '-' + d.track_id;
+				d.local_date = parse_datetime(d.is_rain)['date']; // bug: is_rain --> local_time
 				return new Box(d);
 			}
 
 			// Load boxes and create tracks when new batch is selected
 			function handle_boxes(_boxes) {		
 				boxes = _boxes;
-				boxes_by_day = d3.group(boxes, d => d.date);
+				boxes_by_day = d3.group(boxes, d => d.local_date);
 
 				let summarizer = function(v) { // v is the list of boxes for one track
 					let date = v[0].date;
@@ -506,7 +511,7 @@ var UI = (function() {
 			
 			// Load scans and boxes
 			Promise.all([
-				d3.text(scans_file).then(handle_scans),
+				d3.csv(scans_file, preprocess_scan).then(handle_scans),
 				d3.csv(csv_file, row2box).then(handle_boxes)
 			]).then( () => {
 
@@ -652,7 +657,7 @@ var UI = (function() {
 			.append("option")
 			.merge(options)
 			.attr("value", (d,i) => i)
-			.text(d => parse_time(parse_scan(d)['time']));
+			.text(d => parse_time(parse_scan(d.filename)['time']));
 
 		options.exit().remove();
 		
@@ -720,12 +725,12 @@ var UI = (function() {
 				
 		var scan = frames.currentItem;
 		
-		var urls = get_urls(scan, nav["dataset"], dataset_config);
+		var urls = get_urls(scan.filename, nav["dataset"], dataset_config);
 		d3.select("#img1").attr("src", urls[0]);
 		d3.select("#img2").attr("src", urls[1]);
 
 		let boxes_for_day = boxes_by_day.has(day) ? boxes_by_day.get(day) : [];
-		let boxes_for_scan = boxes_for_day.filter(d => d.filename.trim() == scan.trim());
+		let boxes_for_scan = boxes_for_day.filter(d => d.filename.trim() == scan.filename.trim());
 		active_tracks = boxes_for_scan.map(b => tracks.get(b.track_id));
 		
 		let track_ids = boxes_for_day.map((d) => d.track_id);
