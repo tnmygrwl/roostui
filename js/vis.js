@@ -473,7 +473,7 @@ var UI = (function() {
 					d.x = tmp;
 				}
 				d.track_id = d.date + '-' + d.track_id;
-				d.local_date = parse_datetime(d.is_rain)['date']; // bug: is_rain --> local_time
+				d.local_date = parse_datetime(d.local_time)['date'];
 				return new Box(d);
 			}
 
