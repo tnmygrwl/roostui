@@ -37,6 +37,21 @@ export function parse_time(timestr) {
 	return hour + ':' + minute + ':' + second + ' UTC';
 }
 
+export function parse_datetime(datetime) {
+	var datestr = datetime.substr(0, 8);
+	var timestr = datetime.substr(9, 6);
+	var year = datestr.substr(0, 4);
+	var month = datestr.substr(4, 2);
+	var day = datestr.substr(6, 2);
+	return {
+		'date': datestr,
+		'time': timestr,
+		'year': parseInt(year),
+		'month': parseInt(month),
+		'day': parseInt(day)
+	};
+}
+
 export function parse_scan(scan) {
 	var station = scan.substr(0, 4);
 	var datestr = scan.substr(4, 8);
