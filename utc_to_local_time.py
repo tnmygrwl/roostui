@@ -6,7 +6,7 @@ import pytz
 from datetime import datetime
 from roosts.utils.nexrad_util import NEXRAD_LOCATIONS
 
-DIR = "data/all_stations_v1"
+DIR = "data/train"
 
 def key_to_local_time(scan):
     utc_time = datetime(
@@ -28,14 +28,12 @@ for file in os.listdir(DIR):
         print(file, "is empty")
         continue
 
-    if file.startswith("scans"):
+    if file.startswith("scan"):
         with open(os.path.join(DIR, file), "w") as f:
-            continue
-            # f.writelines(["filename,local_time\n"])
-            # f.writelines([f"{line},{key_to_local_time(line)}\n" for line in lines])
+            f.writelines(["filename,local_time\n"])
+            f.writelines([f"{line},{key_to_local_time(line)}\n" for line in lines])
 
-    elif file.startswith("tracks"):
+    if file.endswith("boxes.txt"):
         with open(os.path.join(DIR, file), "w") as f:
             f.write("track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time\n")
-            # f.writelines([f"{line},{key_to_local_time(line.split(',')[1])}\n" for line in lines[1:]])
-            f.writelines([f"{line}\n" for line in lines[1:]])
+            f.writelines([f"{line},{key_to_local_time(line.split(',')[1])}\n" for line in lines[1:]])
