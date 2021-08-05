@@ -472,7 +472,7 @@ var UI = (function() {
 					d.y = d.x;
 					d.x = tmp;
 				}
-				d.track_id = d.station + '-' + d.date + '-' + d.track_id;
+				d.track_id = d.station + d.date + '-' + d.track_id;
 				d.local_date = parse_datetime(d.local_time)['date'];
 				return new Box(d);
 			}
