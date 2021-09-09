@@ -783,7 +783,7 @@ var UI = (function() {
 		groups.select("text")
 		 	.attr("x", b => b.x - scale*b.r + 5)
 			.attr("y", b => b.y - scale*b.r - 5)
-		 	.text(b => b.track_id + ": " + b.det_score);		
+		 	.text(b => b.track_id.split('-').pop() + ": " + b.det_score);
 
 		groups.on("click", (e,d) => d.track.setLabel("non-roost"));
 		
