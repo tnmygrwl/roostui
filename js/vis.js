@@ -46,8 +46,10 @@ var UI = (function() {
 
 	var labels = ['non-roost',
 				  'swallow-roost',
+				  'weather-roost',
+				  'unknown-noise-roost',
+				  'AP-roost',
 				  'duplicate',
-				  'other-roost',
 				  'bad-track'];
 	
 	var default_filters = {
