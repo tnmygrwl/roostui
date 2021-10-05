@@ -474,7 +474,9 @@ var UI = (function() {
 					d.y = d.x;
 					d.x = tmp;
 				}
-				d.track_id = d.station + d.date + '-' + d.track_id;
+				if(d.track_id.length < 13){
+					d.track_id = d.station + d.date + '-' + d.track_id;
+				}
 				d.local_date = parse_datetime(d.local_time)['date'];
 				return new Box(d);
 			}
@@ -485,19 +487,31 @@ var UI = (function() {
 				boxes_by_day = d3.group(boxes, d => d.local_date);
 
 				let summarizer = function(v) { // v is the list of boxes for one track
-					let date = v[0].date;
-					let length = v.length;
 					let tot_score = d3.sum(v, d => d.det_score);
 					let avg_score = tot_score / length;
+					let viewed = false;
+					let user_labeled = false;
+					let label = null;
+					let original_label = null;
+					let notes = "";
+					if (v[0].user_labeled != null) {
+						viewed = v[0].viewed;
+						user_labeled = v[0].user_labeled;
+						label = v[0].label;
+						original_label = v[0].original_label;
+						notes = v[0].notes;
+					}
 					return new Track({
 						id: v[0].track_id,
 						date: v[0].date,
 						length: v.length,
 						tot_score: tot_score,
 						avg_score: avg_score,
-						user_labeled: false,
-						viewed: false,
-						notes: "",
+						viewed: viewed,
+						user_labeled: user_labeled,
+						label: label,
+						original_label: original_label,
+						notes: notes,
 						boxes: v
 					});
 				};
@@ -525,6 +539,11 @@ var UI = (function() {
 				day_notes = new Map();
 				for (let day of days.items) {
 					day_notes.set(day, '');
+				}
+				for (let box of boxes) {
+					if (box['day_notes'] != null) {
+						day_notes.set(box['date'], box['day_notes'])
+					}
 				}
 				
 				var dateSelect = d3.select("#dateSelect");
