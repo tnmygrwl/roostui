@@ -1,6 +1,7 @@
 {
     "datasets" : ["all_stations_v1",
                   "all_stations_v2",
+                  "all_stations_v2_screened",
                   "bat",
                   "clutter",
                   "train",
