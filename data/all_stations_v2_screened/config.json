@@ -1,11 +1,11 @@
 {
     "dz": {
-        "pattern": "http://doppler.cs.umass.edu/roost/img/%s/dz05/%04d/%02d/%02d/%s/%s.png",
-        "fields": ["dataset", "year", "month", "day", "station", "scan"]
+        "pattern": "http://doppler.cs.umass.edu/roost/img/all_stations_v2/dz05/%04d/%02d/%02d/%s/%s.png",
+        "fields": ["year", "month", "day", "station", "scan"]
     },
     "vr": {
-        "pattern": "http://doppler.cs.umass.edu/roost/img/%s/vr05/%04d/%02d/%02d/%s/%s.png",
-        "fields": ["dataset", "year", "month", "day", "station", "scan"]
+        "pattern": "http://doppler.cs.umass.edu/roost/img/all_stations_v2/vr05/%04d/%02d/%02d/%s/%s.png",
+        "fields": ["year", "month", "day", "station", "scan"]
     },
     "boxes" : {
         "pattern": "data/%s/roost_labels_%s.csv",
