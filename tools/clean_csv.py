@@ -5,18 +5,18 @@ This script cleans the duplications.
 
 import os
 
-DIR = "/scratch2/wenlongzhao/roostui/data/all_stations_v2"
+DIR = "/scratch2/wenlongzhao/roostui/data/all_stations_v2_screened"
 
 for file in os.listdir(DIR):
-    if file.startswith("scans") or file.startswith("tracks"):
+    if file.startswith("scans") or file.startswith("tracks") or file.startswith("roost_labels"):
         lines = open(os.path.join(DIR, file), "r").readlines()
         good_lines = []
         good_lines_set = set()
 
         for line in lines:
-            if line not in good_lines_set:
+            if ",".join(line.split(",")[:11]) not in good_lines_set:
                 good_lines.append(line)
-                good_lines_set.add(line)
+                good_lines_set.add(",".join(line.split(",")[:11]))
 
         with open(os.path.join(DIR, file), "w") as f:
             f.writelines(good_lines)
