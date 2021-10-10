@@ -11,6 +11,7 @@ Development:
 ```
 # You can use `npm install` instead of `yarn install`, but it is slower and may fetch incompatible newer versions of libraries.
 yarn install
+yarn run build
 yarn run serve
 ```
 
