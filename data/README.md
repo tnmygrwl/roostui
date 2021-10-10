@@ -1,27 +1,30 @@
 # Adding new data to the website
 
-1. Login to swarm2 and use `tools/publish_images.sh` (from the [roost-system repo](https://github.com/darkecology/roost-system)) to push the images to doppler.
+1. Login to swarm2. Modify arguments in `roost-system/tools/publish_images.sh` and run it in a tmux session
+(see the [roost-system](https://github.com/darkecology/roost-system) repo) to push the images to doppler.
+An example usage is as follows.
 
     ~~~ bash
-    $ cd tools
+    $ cd roost-system/tools
     $ ./publish_images.sh <dataset_name>
     ~~~
 
-    See the script for detailed usage. Usually only the experiment name argument is required.
+    Here <dataset_name> corresponds to the EXPERIMENT_NAME that we set when running the roost-system for inference.
 
-2. Clone this repo and use `data/fetch.sh` to pull the csv files for the same experiment to your local machine. 
+2. Clone this repo to your machine. 
+Modify arguments in `data/fetch.sh` and run it to pull the csv files for the same experiment from swarm2. 
 
     ~~~ bash
     $ cd data
     $ ./fetch.sh <dataset_name>
     ~~~
 
-    This will create a new directory `data/<dataset_name>` with the csv files.
+    This will create a new directory `data/<dataset_name>` (if not already exist) with the csv files.
 
-3. Initialize the dataset:
+3. Initialize the dataset.
 
     ~~~ bash
-    $ ./init_dataset.sh <dataset_name> # add optional prefix and suffix
+    $ ./init_dataset.sh <dataset_name> # add optional prefix and suffix if needed
     ~~~
     
     This creates two files
@@ -30,7 +33,7 @@
     
     Edit these files if needed.
 
-4. Edit the main UI config file `data/config.json` subdirectory to add your data set
+4. Edit the main UI config file `data/config.json` to add your dataset
 
     ~~~ json
     {
@@ -40,10 +43,12 @@
 
 5. Test the website locally. See [README in parent directory](../README.md). Usually this means running `yarn run serve` and then navigating to [http://localhost:8888]().
 
-6. Commit and push your changes, and push the website to dopper with the script `publish.sh` in the root directory of the repo.
+6. Push the website to doppler with the script `publish.sh` in the root directory of the repo.
 
     ~~~ bash
-    $ git commit
-    $ git push
-    $ ./publish.sh
+    $ ./publish.sh <website_name>
     ~~~
+   
+   We currently use `ui` as the <website_name>.
+
+7. Commit and push your changes to github. 
