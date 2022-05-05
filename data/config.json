@@ -2,7 +2,6 @@
     "datasets" : ["all_stations_v1",
                   "all_stations_v2",
                   "all_stations_v2_screened",
-                  "bat",
                   "clutter",
                   "train",
                   "greatlakes-2019",
@@ -11,5 +10,7 @@
                   "greatlakes_test_c4_det01",
                   "greatlakes_test_exp07_det005",
                   "greatlakes_test_exp07_det01",
-                  "try"]
+                  "greatlakes_test_v3_det005",
+                  "texas_bats_v2",
+                  "texas_bats_v3"]
 }
