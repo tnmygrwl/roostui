@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KLGX20180821_133410_V06,13,0.212,286.99,398.159943,13.459122,-124.19,46.674278,6729.560852,20180821_063410

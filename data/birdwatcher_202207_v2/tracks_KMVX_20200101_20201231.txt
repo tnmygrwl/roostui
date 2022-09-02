@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KMVX20200919_132935_V06,77,0.064,206.35,350.019287,7.772751,-97.94,47.301434,3886.375427,20200919_082935

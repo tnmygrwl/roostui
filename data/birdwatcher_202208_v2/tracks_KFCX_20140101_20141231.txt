@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+2,KFCX20140809_100322_V06,-29,0.103,36.43,420.546936,55.998375,-81.74,36.471896,27999.187469,20140809_060322

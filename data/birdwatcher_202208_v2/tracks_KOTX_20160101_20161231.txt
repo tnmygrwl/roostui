@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+5,KOTX20160902_141630_V06,65,0.073,68.68,59.620117,8.123973,-119.20,48.750841,4061.986446,20160902_071630

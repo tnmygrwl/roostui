@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KINX20170806_113013_V06,-3,0.069,254.49,88.882080,33.649548,-95.82,37.125957,16824.773788,20170806_063013

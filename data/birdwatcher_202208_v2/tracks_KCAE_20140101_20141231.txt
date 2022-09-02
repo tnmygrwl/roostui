@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KCAE20140926_110525_V06,-10,0.147,430.41,369.815430,5.084953,-80.42,33.631887,2542.476654,20140926_070525

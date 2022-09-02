@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+4,KHPX20131028_130257_V06,53,0.147,159.04,299.984650,27.241753,-88.07,36.734123,13620.876312,20131028_080257

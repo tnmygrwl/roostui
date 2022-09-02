@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KNQA20151003_121553_V06,20,0.079,342.42,251.452484,1.908173,-89.64,35.563277,954.086304,20151003_071553
