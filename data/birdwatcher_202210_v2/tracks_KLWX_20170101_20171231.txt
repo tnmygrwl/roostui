@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KLWX20170515_110600_V06,69,0.050,267.71,327.649933,6.286194,-77.67,38.851598,3143.096924,20170515_070600

@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+7,KBUF20180512_102238_V06,27,0.059,161.08,75.756470,24.669746,-79.60,43.954556,12334.873199,20180512_062238

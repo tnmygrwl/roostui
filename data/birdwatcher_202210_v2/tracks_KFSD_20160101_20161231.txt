@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+8,KFSD20160430_112254_V06,2,0.272,372.10,255.883301,9.233978,-96.28,43.785439,4616.989136,20160430_062254

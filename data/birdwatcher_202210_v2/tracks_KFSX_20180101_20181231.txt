@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KFSX20180529_120319_V06,-11,0.060,315.40,359.974670,28.384514,-111.11,34.304085,14192.256927,20180529_050319

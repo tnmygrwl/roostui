@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KLNX20190527_104835_V06,-24,0.060,38.96,470.748413,39.487667,-102.13,41.178480,19743.833542,20190527_054835

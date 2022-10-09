@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KFTG20200524_114702_V06,11,0.087,199.39,521.929077,24.779457,-105.12,38.785723,12389.728546,20200524_054702

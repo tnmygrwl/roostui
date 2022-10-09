@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KSOX20210307_141811_V06,7,0.088,429.43,235.252747,25.405457,-116.93,34.107648,12702.728271,20210307_061811

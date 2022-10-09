@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KCLE20210616_095036_V06,-3,0.081,283.91,355.280762,7.116180,-81.96,41.164141,3558.090210,20210616_055036

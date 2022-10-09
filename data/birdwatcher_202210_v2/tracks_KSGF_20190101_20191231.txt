@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KSGF20190627_121239_V06,77,0.065,54.52,341.507324,54.370605,-94.78,37.040231,27185.302734,20190627_071239

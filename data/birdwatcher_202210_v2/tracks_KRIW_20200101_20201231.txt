@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KRIW20200616_112629_V06,-8,0.176,24.52,105.479980,28.378948,-110.19,43.928777,14189.474106,20200616_052629

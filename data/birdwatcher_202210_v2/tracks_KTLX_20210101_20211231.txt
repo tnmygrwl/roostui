@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+5,KTLX20210504_121446_V06,40,0.098,28.83,375.285065,28.095886,-98.76,34.984632,14047.943115,20210504_071446

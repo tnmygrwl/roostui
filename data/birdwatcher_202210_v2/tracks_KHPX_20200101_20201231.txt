@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+1,KHPX20200418_110629_V06,-4,0.052,302.08,363.082886,20.913059,-87.27,36.452436,10456.529617,20200418_060629

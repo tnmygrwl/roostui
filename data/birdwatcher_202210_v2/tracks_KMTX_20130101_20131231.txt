@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+9,KMTX20130501_130105_V06,35,0.084,404.25,419.853485,29.990158,-111.83,40.721500,14995.079041,20130501_070105

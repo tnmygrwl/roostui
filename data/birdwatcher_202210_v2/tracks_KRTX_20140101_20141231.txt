@@ -1,0 +1,2 @@
+track_id,filename,from_sunrise,det_score,x,y,r,lon,lat,radius,local_time
+2,KRTX20140508_122108_V06,-28,0.065,420.96,528.460571,36.427608,-122.20,44.684576,18213.804245,20140508_052108
