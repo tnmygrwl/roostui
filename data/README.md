@@ -2,14 +2,14 @@
 
 Deploying [roost-system](https://github.com/darkecology/roost-system) results in four types of outputs: radar `scans`, rendered `arrays`, deployment `logs`, and `ui`-required files. Typically, `scans` are deleted during deployment to save disk space once `arrays` are rendered. In addition, `slurm_logs` are saved if the deployment happens on a server that uses slurm to manage jobs.
 
-1. Login to swarm which uses slurm job management. Go to the [roost-system](https://github.com/darkecology/roost-system) repo. Under `roost-system/tools`, modify arguments in `publish_images.sh`. Open a tmux session and run the script as follows to push dz05 and vr05 images in `ui/img` to doppler, where we host the website.
+1. Login to swarm which uses slurm. Go to the [roost-system](https://github.com/darkecology/roost-system) repo. Under `roost-system/tools`, modify arguments in `publish_images.sh`. Open a tmux session and run the script as follows to push dz05 and vr05 images in `ui/img`, which visualizes two radar channels and will be displayed in the UI, to doppler, where we host the website.
 
     ~~~ bash
     $ cd roost-system/tools
     $ bash publish_images.sh <dataset_name>
     ~~~
 
-    Here <dataset_name> corresponds to the EXPERIMENT_NAME that we set when launching roost-system for inference and the <dataset_name> that will be displayed in the UI. It is recommended to open another tmux session and scp `slurm_logs`, `logs`, and `arrays` to some desired location on doppler for future reference.
+    Here <dataset_name> corresponds to the EXPERIMENT_NAME that we set when launching roost-system for inference and the <dataset_name> that will be displayed in the UI. It is recommended to open another tmux session and scp `slurm_logs`, `logs`, and `arrays` to some desired location on doppler for future reference. The `arrays` may be copied to `doppler:/scratch2/wenlongzhao/RadarNPZ` and used to construct new datasets.
 
 2. Clone this roostui repo to your machine. 
 Under `data`, modify arguments in `fetch.sh` and run it to pull the csv files in `ui/scans_and_tracks` from swarm. 
