@@ -2,6 +2,7 @@
     "datasets" : ["all_stations_v1",
                   "all_stations_v2",
                   "all_stations_v2_screened",
+                  "all_stations_v3",
                   "clutter",
                   "train",
                   "greatlakes-2019",
