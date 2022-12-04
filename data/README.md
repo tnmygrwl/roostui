@@ -9,7 +9,9 @@ Deploying [roost-system](https://github.com/darkecology/roost-system) results in
     $ bash publish_images.sh <dataset_name>
     ~~~
 
-    Here <dataset_name> corresponds to the EXPERIMENT_NAME that we set when launching roost-system for inference and the <dataset_name> that will be displayed in the UI. It is recommended to open another tmux session and scp `slurm_logs`, `logs`, and `arrays` to some desired location on doppler for future reference. The `arrays` may be copied to `doppler:/scratch2/wenlongzhao/RadarNPZ` and used to construct new datasets.
+    Here <dataset_name> corresponds to the EXPERIMENT_NAME that we set when launching roost-system for inference and the <dataset_name> that will be displayed in the UI. 
+
+    It is recommended to open more tmux sessions to scp `scans`, `logs`, and `slurm_logs` to some desired location on doppler (eg. /scratch2/wenlongzhao/roosts_deployment_outputs) for future reference. Further, `arrays` may be copied to `doppler:/scratch2/wenlongzhao/RadarNPZ` and used to construct new datasets.
 
 2. Clone this roostui repo to your machine. 
 Under `data`, modify arguments in `fetch.sh` and run it to pull the csv files in `ui/scans_and_tracks` from swarm. 
@@ -51,4 +53,4 @@ Under `data`, modify arguments in `fetch.sh` and run it to pull the csv files in
    
    We currently use `ui` as the <website_name>.
 
-7. Commit and push your changes to github.
+7. Commit and push your changes to github. Clean files from swarm to prevent out of space errors in furture deployment.
