@@ -53,4 +53,4 @@ Under `data`, modify arguments in `fetch.sh` and run it to pull the csv files in
    
    We currently use `ui` as the <website_name>.
 
-7. Commit and push your changes to github. Clean files from swarm to prevent out of space errors in furture deployment.
+7. Commit and push your changes to github. `chmod` so that the directories on doppler can be modified by teammates. Clean files on swarm to prevent out of space errors in furture deployment.
