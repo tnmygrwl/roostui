@@ -18,12 +18,12 @@ var UI = (function() {
 
 	var scans;					// List of scans for selected "batch"
 	var boxes;					// All boxes
-	var boxes_by_day;           // Boxes grouped by day
+	var boxes_by_day;           // Boxes grouped by local dates
 	var tracks;					// All tracks
 
 	var active_tracks;			// boxes active in current frame
 
-	var day_notes;              // map from day to notes for that day
+	var day_notes;              // map from a local date to notes for that local date
 		
 	var svgs;					// Top-level svg elements
 
@@ -459,7 +459,7 @@ var UI = (function() {
 					);
 				}
 
-				// group scans by day
+				// group scans by local_date
 				scans = d3.group(scans, (d) => d.local_date);
 			}
 
@@ -474,11 +474,24 @@ var UI = (function() {
 					d.y = d.x;
 					d.x = tmp;
 				}
-				if(d.track_id.length < 13){
-					d.track_id = d.station + d.date + '-' + d.track_id;
-				}
 				d.local_date = parse_datetime(d.local_time)['date'];
+				if(d.track_id.length < 13){
+					d.track_id = d.station + d.local_date + '-' + d.track_id;
+				}
 				return new Box(d);
+			}
+
+			function sum_non_neg_values(boxes) {
+				let sum = 0;
+				let n_values = 0;
+				for (let box of boxes) {
+					if (box.det_score >= 0) {
+						sum += parseFloat(box.det_score);
+						n_values += 1;
+					}
+				}
+				let avg = sum / n_values
+				return {'sum': sum, 'avg': avg};
 			}
 
 			// Load boxes and create tracks when new batch is selected
@@ -487,8 +500,7 @@ var UI = (function() {
 				boxes_by_day = d3.group(boxes, d => d.local_date);
 
 				let summarizer = function(v) { // v is the list of boxes for one track
-					let tot_score = d3.sum(v, d => d.det_score);
-					let avg_score = tot_score / length;
+					let scores = sum_non_neg_values(v);
 					let viewed = false;
 					let user_labeled = false;
 					let label = null;
@@ -505,8 +517,8 @@ var UI = (function() {
 						id: v[0].track_id,
 						date: v[0].date,
 						length: v.length,
-						tot_score: tot_score,
-						avg_score: avg_score,
+						tot_score: scores['sum'],
+						avg_score: scores['avg'],
 						viewed: viewed,
 						user_labeled: user_labeled,
 						label: label,
@@ -534,15 +546,16 @@ var UI = (function() {
 				enable_filtering();
 				
 				days = new BoolList(scans.keys(), boxes_by_day.keys());
+						// scans were grouped by local_dates, scans.keys() are local_dates
 
 				// Initialize notes
 				day_notes = new Map();
 				for (let day of days.items) {
-					day_notes.set(day, '');
+					day_notes.set(day, ''); // local_date
 				}
 				for (let box of boxes) {
 					if (box['day_notes'] != null) {
-						day_notes.set(box['date'], box['day_notes'])
+						day_notes.set(box['local_date'], box['day_notes'])
 					}
 				}
 				
@@ -894,7 +907,7 @@ var UI = (function() {
 
 		// Assign day notes to box
 		for (let box of boxes) {
-			box['day_notes'] = day_notes.get(box['date']);
+			box['day_notes'] = day_notes.get(box['local_date']);
 		}
 
 		// This is the list of output columns

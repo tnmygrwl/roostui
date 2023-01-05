@@ -13,7 +13,7 @@ Deploying [roost-system](https://github.com/darkecology/roost-system) results in
 
     It is recommended to open more tmux sessions to scp `scans`, `logs`, and `slurm_logs` to some desired location on doppler (eg. /scratch2/wenlongzhao/roosts_deployment_outputs) for future reference. Further, `arrays` may be copied to `doppler:/scratch2/wenlongzhao/RadarNPZ` and used to construct new datasets.
 
-2. Clone this roostui repo to your machine. 
+2. Clone this roostui repo to your machine, if not already; otherwise pull the latest main branch.
 Under `data`, modify arguments in `fetch.sh` and run it to pull the csv files in `ui/scans_and_tracks` from swarm. 
 
     ~~~ bash
