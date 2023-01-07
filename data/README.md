@@ -2,7 +2,7 @@
 
 Deploying [roost-system](https://github.com/darkecology/roost-system) results in four types of outputs: radar `scans`, rendered `arrays`, deployment `logs`, and `ui`-required files. Typically, `scans` are deleted during deployment to save disk space once `arrays` are rendered. In addition, `slurm_logs` are saved if the deployment happens on a server that uses slurm to manage jobs.
 
-1. Login to swarm which uses slurm. Go to the [roost-system](https://github.com/darkecology/roost-system) repo. Under `roost-system/tools`, modify arguments in `publish_images.sh`. Open a tmux session and run the script as follows to push dz05 and vr05 images in `ui/img`, which visualizes two radar channels and will be displayed in the UI, to doppler, where we host the website.
+1. Login to swarm which uses slurm. Go to the [roost-system](https://github.com/darkecology/roost-system) repo. Under `roost-system/tools`, modify arguments in `publish_images.sh` as needed. Open a tmux session and run the script as follows to push dz05 and vr05 images in `ui/img`, which visualizes two radar channels and will be displayed in the UI, to doppler, where we host the website.
 
     ~~~ bash
     $ cd roost-system/tools
@@ -11,7 +11,7 @@ Deploying [roost-system](https://github.com/darkecology/roost-system) results in
 
     Here <dataset_name> corresponds to the EXPERIMENT_NAME that we set when launching roost-system for inference and the <dataset_name> that will be displayed in the UI. 
 
-    It is recommended to open more tmux sessions to scp `scans`, `logs`, and `slurm_logs` to some desired location on doppler (eg. /scratch2/wenlongzhao/roosts_deployment_outputs) for future reference. Further, `arrays` may be copied to `doppler:/scratch2/wenlongzhao/RadarNPZ` and used to construct new datasets.
+    It is recommended to open more tmux sessions to scp `scans`, `arrays`, `logs`, and `slurm_logs` to some desired location on doppler (eg. `/scratch2/wenlongzhao/roosts_deployment_outputs`) for future reference. In the future, `arrays` may be used to construct new datasets and moved to `doppler:/scratch2/wenlongzhao/RadarNPZ`.
 
 2. Clone this roostui repo to your machine, if not already; otherwise pull the latest main branch.
 Under `data`, modify arguments in `fetch.sh` and run it to pull the csv files in `ui/scans_and_tracks` from swarm. 
