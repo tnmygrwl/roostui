@@ -8,7 +8,7 @@
                   "birdwatcher_202208_v2",
                   "birdwatcher_202209_v2",
                   "birdwatcher_202210_v2",
-                  "texas_bats_v3",
+                  "texas_bats_v3_long",
                   "clutter",
                   "conf_present_202206_v2",
                   "greatlakes-2019",
@@ -20,5 +20,6 @@
                   "greatlakes_test_v3_det005",
                   "polarimetric_202206_v2",
                   "texas_bats_v2",
+                  "texas_bats_v3",
                   "texas_bats_v3_bug"]
 }

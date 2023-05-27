@@ -1,3 +1,6 @@
+tools/analyze_csv_correctness
+data/*_
+
 node_modules/
 **.ipynb_checkpoints
 **.DS_Store
