@@ -14,8 +14,8 @@ Deploying [roost-system](https://github.com/darkecology/roost-system) results in
     It is recommended to open more tmux sessions to scp `scans`, `arrays`, `logs`, and `slurm_logs` to some desired location on doppler for future reference. For example, `arrays` may be used to construct new datasets and moved to `doppler:/scratch2/wenlongzhao/RadarNPZ`.
 
     ~~~ bash
-    $ rsync -a roosts_data/texas_bats/ wenlongzhao@doppler.cs.umass.edu:/scratch2/wenlongzhao/roosts_deployment_outputs/texas_bats/
-    $ scp -r slurm_logs/texas_bats wenlongzhao@doppler.cs.umass.edu:/scratch2/wenlongzhao/roosts_deployment_outputs/slurm_logs/
+    $ rsync -a roosts_data/<dataset_name>/ wenlongzhao@doppler.cs.umass.edu:/scratch2/wenlongzhao/roosts_deployment_outputs/<dataset_name>/
+    $ scp -r slurm_logs/<dataset_name> wenlongzhao@doppler.cs.umass.edu:/scratch2/wenlongzhao/roosts_deployment_outputs/slurm_logs/
     ~~~
 
 2. Clone this roostui repo to your machine, if not already; otherwise pull the latest main branch.
