@@ -38,14 +38,14 @@ def aws_parse(name):
 
     # example: KBGM20170421_025222
     return {
-        'station': name[0:4],
-        'year':    int(name[4:8]),
-        'month':   int(name[8:10]),
-        'day':     int(name[10:12]),
-        'hour':    int(name[13:15]),
-        'minute':  int(name[15:17]),
-        'second':  int(name[17:19]),
-        'suffix':  name[19:] + ext
+        'station': name[:4],
+        'year': int(name[4:8]),
+        'month': int(name[8:10]),
+        'day': int(name[10:12]),
+        'hour': int(name[13:15]),
+        'minute': int(name[15:17]),
+        'second': int(name[17:19]),
+        'suffix': name[19:] + ext,
     }
 
 def aws_key(s, suffix=''):
@@ -84,7 +84,7 @@ def aws_key(s, suffix=''):
                                  s['month'], 
                                  s['day'], 
                                  s['station'])
-    
+
     name = '%s%04d%02d%02d_%02d%02d%02d' % (s['station'], 
                                             s['year'], 
                                             s['month'], 
@@ -92,13 +92,11 @@ def aws_key(s, suffix=''):
                                             s['hour'], 
                                             s['minute'], 
                                             s['second']);
-    
+
 
     suff = suffix or s['suffix']
-    
-    key = '%s/%s%s' % (path, name, suff)
-    
-    return key
+
+    return f'{path}/{name}{suff}'
 
 # def test_aws_key():
 #     name = 'KBGM20170421_025222_V06'
@@ -657,42 +655,44 @@ def radar2mat(radar,
               use_ground_range = True,
               interp_method='nearest'):
 
-    
+
     '''
     Input parsing and checking
     '''    
 
     # Get available fields
     available_fields = list(radar.fields.keys())
-    
+
     # Assemble list of fields to render, with error checking
     if fields is None:
         fields = available_fields
-        
+
     elif isinstance(fields, (list, np.array)):
         
         fields = np.array(fields) # convert to numpy array
-        
+
         valid     = np.in1d(fields, VALID_FIELDS)
         available = np.in1d(fields, available_fields)
 
         if not(np.all(valid)):
-            raise ValueError("fields %s are not valid" % (fields[valid != True]))
+            raise ValueError(f"fields {fields[valid != True]} are not valid")
 
         if not(np.all(available)):
-            warnings.warn("requested fields %s were not available" % (fields[available != True]))
-        
+            warnings.warn(
+                f"requested fields {fields[available != True]} were not available"
+            )
+
         fields = fields[available]
-        
+
     else:
         raise ValueError("fields must be None or a list")
 
-        
+
     ''' 
     Get indices of desired sweeps (within unique sweeps), save in "sweeps" variable
     '''
     _, available_elevs = get_tilts(radar)
-    
+
     if sweeps is not None:
         warnings.warn('Both sweeps and elevs are specified. Using sweeps')
     elif elevs is not None:
@@ -703,64 +703,64 @@ def radar2mat(radar,
         sweeps = elev2ind(elevs).astype(int)
     else:
         raise ValueError("must specify either sweeps or elevs")
-    
-    
+
+
     '''
     Construct coordinate matrices PHI, R for query points
-    '''    
+    '''
     if coords == 'polar':
         # Query points
         r   = np.arange(r_min, r_max, r_res)
         phi = np.arange(az_res, 360, az_res)
         PHI, R = np.meshgrid(phi, r)
-        
+
         # Coordinates of three dimensions in output array
         x1 = elevs
         x2 = r
         x3 = phi
- 
+
     elif coords == 'cartesian':
         x = y = np.linspace (-r_max, r_max, dim)
         [X, Y] = np.meshgrid(x, y)
         [PHI, R] = cart2pol(X, Y)
         PHI = pol2cmp(PHI)  # convert from radians to compass heading
-        
+
         # Coordinates of three dimensions in output array
         x1 = elevs
         x2 = y
         x3 = x
 
     else:
-        raise ValueError("inavlid coords: %s" % (coords))
-    
-    
+        raise ValueError(f"inavlid coords: {coords}")
+            
+
     '''
     Build the output 3D arrays
-    ''' 
-    data = dict()   
-    
+    '''
+    data = {}   
+
     m,n = PHI.shape
     nsweeps = len(sweeps)
-    
+
     for field in fields:
         data[field] = np.empty((nsweeps, m, n))
-        
+
         thesweeps = get_sweeps(radar, field)  # all sweeps
 
         for i in range(nsweeps):
-            
+
             # get ith selected sweep
             sweep_num = sweeps[i]
             sweep = thesweeps[sweep_num]
-            
+
             az = sweep['az']
             rng = sweep['rng']
 
             if use_ground_range:
                 rng, _ = slant2ground(rng, sweep['fixed_angle'])
-            
+
             F = radarInterpolant(sweep['data'], az, rng, method=interp_method)
 
             data[field][i,:,:] = F((PHI, R))
-    
+
     return data, x1, x2, x3
